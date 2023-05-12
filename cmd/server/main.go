@@ -1,15 +1,12 @@
 package main
 
 import (
+	"log"
 	"madmax/internal"
 )
 
 func main() {
-	/*
-		if err := server.Run(); err != nil {
-			log.Fatal(err)
-		}
-
-	*/
-	internal.Run()
+	if err := internal.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

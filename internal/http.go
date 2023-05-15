@@ -6,12 +6,38 @@ import (
 	"github.com/gin-gonic/gin"
 	"madmax/internal/mysql"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 func HTTPHandler(router *gin.Engine) {
 	router.GET("/", basicInfoHandler)
-	user := router.Group("/user/v1")
-	user.GET("/animal", animalsInfo)
+
+	userGroup := router.Group("/user/v1")
+	userGroup.POST("/signup")
+	userGroup.GET("/:id", getUserByIDHandler)
+	//user.GET("/animal", animalsInfo)
+}
+
+/*
+	var ucr entity.UserCreateRequest
+	if err := c.ShouldBindJSON(&ucr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+*/
+
+func getUserByIDHandler(c *gin.Context) {
+	id := c.Param("id")
+	uID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Minute*2)
+	userByID(tctx, uID)
 }
 
 func basicInfoHandler(c *gin.Context) {

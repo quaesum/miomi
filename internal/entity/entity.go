@@ -1,9 +1,18 @@
 package entity
 
 type User struct {
-	ID    int64
-	Name  string
-	Email string
+	ID        int64
+	FirstName string
+	LastName  string
+	Password  string
+	CreatedAt int64
+	Email     string
+}
+type UserCreateRequest struct {
+	FirstName string
+	LastName  string
+	Password  string
+	Email     string
 }
 
 type Animal struct {

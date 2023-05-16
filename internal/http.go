@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"madmax/internal/entity"
 	"madmax/internal/mysql"
 	"net/http"
 	"strconv"
@@ -14,20 +15,25 @@ func HTTPHandler(router *gin.Engine) {
 	router.GET("/", basicInfoHandler)
 
 	userGroup := router.Group("/user/v1")
-	userGroup.POST("/signup")
 	userGroup.GET("/:id", getUserByIDHandler)
-	//user.GET("/animal", animalsInfo)
+	userGroup.GET("/", getAllUsersHandler)
+	userGroup.POST("/signup", userSignupHandler)
+	userGroup.POST("/:id", updateUserHandler)
+
+	animalGroup := router.Group("/animal/v1")
+	animalGroup.GET("/:id", getAnimalByIDHandler)
+	animalGroup.GET("/", getAllUsersDHandler)
+	animalGroup.POST("/:id", createAnimalHandler)
+	animalGroup.POST("/:id", updateAnimalHandler)
+
+	shelterGroup := router.Group("/shelter/v1")
+	shelterGroup.GET("/:id", getShelterByIDHandler)
+	shelterGroup.GET("/", getAllSheltersHandler)
+	shelterGroup.POST("/:id", createShelterHandler)
+	shelterGroup.POST("/:id", updateShelterHandler)
 }
 
-/*
-	var ucr entity.UserCreateRequest
-	if err := c.ShouldBindJSON(&ucr); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-*/
-
+/* ==================================== USERS =========================================== */
 func getUserByIDHandler(c *gin.Context) {
 	id := c.Param("id")
 	uID, err := strconv.ParseInt(id, 10, 64)
@@ -52,6 +58,48 @@ func basicInfoHandler(c *gin.Context) {
 
 	c.String(http.StatusOK, send)
 
+}
+
+func userSignupHandler(c *gin.Context) {
+	var ucr entity.UserCreateRequest
+	if err := c.ShouldBindJSON(&ucr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+}
+func getAllUsersHandler(c *gin.Context) {
+}
+func updateUserHandler(c *gin.Context) {
+	var ucr entity.UserCreateRequest
+	if err := c.ShouldBindJSON(&ucr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{})
+}
+
+/* ============================== ANIMALS ======================================= */
+func getAnimalByIDHandler(c *gin.Context) {
+}
+func getAllUsersDHandler(c *gin.Context) {
+}
+func createAnimalHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
+}
+func updateAnimalHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
+}
+
+/* ============================== SHELTERS ======================================= */
+func getShelterByIDHandler(c *gin.Context) {
+}
+func getAllSheltersHandler(c *gin.Context) {
+}
+func createShelterHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
+}
+func updateShelterHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
 }
 
 func animalsInfo(c *gin.Context) {

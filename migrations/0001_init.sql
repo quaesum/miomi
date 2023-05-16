@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS animal_shelters(
     id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     shelter_name varchar(90) DEFAULT NULL,
     description varchar(340) DEFAULT NULL,
+    logo varchar(240) DEFAULT NULL,
     phone varchar(45) DEFAULT NULL,
     adress varchar(240) DEFAULT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

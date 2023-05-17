@@ -10,6 +10,7 @@ type Animal struct {
 	Sterilized  bool
 	Vaccinated  bool
 	Shelter     string
+	Photo       string
 }
 
 type AnimalCreateRequest struct {

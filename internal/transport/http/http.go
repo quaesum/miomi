@@ -1,36 +1,36 @@
-package internal
+package http
 
 import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"madmax/internal/application"
+	"madmax/internal/application/db/mysql"
 	"madmax/internal/entity"
-	"madmax/internal/mysql"
 	"net/http"
 	"strconv"
 	"time"
 )
 
 func HTTPHandler(router *gin.Engine) {
-	router.GET("/", basicInfoHandler)
-
-	userGroup := router.Group("/user/v1")
+	api := router.Group("/api")
+	userGroup := api.Group("/user/v1")
 	userGroup.GET("/:id", getUserByIDHandler)
 	userGroup.GET("/", getAllUsersHandler)
-	userGroup.POST("/signup", userSignupHandler)
-	userGroup.POST("/:id", updateUserHandler)
+	userGroup.Use(AdminTokenCheck()).POST("/signup", userSignupHandler)
+	userGroup.Use(AdminTokenCheck()).POST("/:id", updateUserHandler)
 
-	animalGroup := router.Group("/animal/v1")
+	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
 	animalGroup.GET("/", getAllUsersDHandler)
-	animalGroup.POST("/:id", createAnimalHandler)
-	animalGroup.POST("/:id", updateAnimalHandler)
+	animalGroup.Use(AdminTokenCheck()).POST("/:id", createAnimalHandler)
+	animalGroup.Use(AdminTokenCheck()).POST("/update/:id", updateAnimalHandler)
 
-	shelterGroup := router.Group("/shelter/v1")
+	shelterGroup := api.Group("/shelter/v1")
 	shelterGroup.GET("/:id", getShelterByIDHandler)
 	shelterGroup.GET("/", getAllSheltersHandler)
-	shelterGroup.POST("/:id", createShelterHandler)
-	shelterGroup.POST("/:id", updateShelterHandler)
+	shelterGroup.Use(AdminTokenCheck()).POST("/:id", createShelterHandler)
+	shelterGroup.Use(AdminTokenCheck()).POST("/update/:id", updateShelterHandler)
 }
 
 /* ==================================== USERS =========================================== */
@@ -43,7 +43,7 @@ func getUserByIDHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Minute*2)
-	userByID(tctx, uID)
+	application.UserByID(tctx, uID)
 }
 
 func basicInfoHandler(c *gin.Context) {
@@ -82,6 +82,12 @@ func updateUserHandler(c *gin.Context) {
 func getAnimalByIDHandler(c *gin.Context) {
 }
 func getAllUsersDHandler(c *gin.Context) {
+	animals, err := application.AnimalsAll(context.Background())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, animals)
 }
 func createAnimalHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})

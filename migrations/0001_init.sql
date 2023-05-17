@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS animals_on_types (
     id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     animal_typeID INT(11) UNSIGNED,
     animalID INT(11) UNSIGNED,
-    CONSTRAINT mi_animal_types_assigned FOREIGN KEY(animal_typesID) REFERENCES animal_types(id) ON DELETE SET NULL,
+    CONSTRAINT mi_animal_types_assigned FOREIGN KEY(animal_typeID) REFERENCES animal_types(id) ON DELETE SET NULL,
     CONSTRAINT mi_types_assigned FOREIGN KEY(animalID) REFERENCES animals(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS news (
+    id INT(11) unsigned PRIMARY KEY AUTO_INCREMENT,
+    label varchar(64) DEFAULT NULL,
+    description text DEFAULT NULL,
+    photo varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

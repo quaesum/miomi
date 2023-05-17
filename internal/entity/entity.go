@@ -37,3 +37,10 @@ type ShelterCreateRequest struct {
 	Location    string
 	Description string
 }
+
+type News struct {
+	ID          int64
+	Label       int64
+	Description string
+	Photo       string
+}

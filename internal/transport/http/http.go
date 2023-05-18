@@ -12,25 +12,29 @@ import (
 	"time"
 )
 
-func HTTPHandler(router *gin.Engine) {
+func HttpHandler(router *gin.Engine) {
 	api := router.Group("/api")
 	userGroup := api.Group("/user/v1")
 	userGroup.GET("/:id", getUserByIDHandler)
 	userGroup.GET("/", getAllUsersHandler)
-	userGroup.Use(AdminTokenCheck()).POST("/signup", userSignupHandler)
-	userGroup.Use(AdminTokenCheck()).POST("/:id", updateUserHandler)
+	userGroup.POST("/signup", userSignupHandler)
+	userGroup.POST("/:id", updateUserHandler)
 
 	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
 	animalGroup.GET("/", getAllUsersDHandler)
-	animalGroup.Use(AdminTokenCheck()).POST("/:id", createAnimalHandler)
-	animalGroup.Use(AdminTokenCheck()).POST("/update/:id", updateAnimalHandler)
+	animalGroup.POST("/:id", createAnimalHandler)
+	animalGroup.POST("/update/:id", updateAnimalHandler)
 
 	shelterGroup := api.Group("/shelter/v1")
 	shelterGroup.GET("/:id", getShelterByIDHandler)
 	shelterGroup.GET("/", getAllSheltersHandler)
-	shelterGroup.Use(AdminTokenCheck()).POST("/:id", createShelterHandler)
-	shelterGroup.Use(AdminTokenCheck()).POST("/update/:id", updateShelterHandler)
+	shelterGroup.POST("/:id", createShelterHandler)
+	shelterGroup.POST("/update/:id", updateShelterHandler)
+
+	adminGroup := api.Group("/admin/v1")
+	adminGroup.Use(AdminTokenCheck()).POST("/user-update/:id", createShelterHandler)
+	adminGroup.Use(AdminTokenCheck()).POST("/user-block/:id", updateShelterHandler)
 }
 
 /* ==================================== USERS =========================================== */

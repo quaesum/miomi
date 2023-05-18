@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"madmax/internal/application/db/mysql"
-	http2 "madmax/internal/transport/http"
+	transport "madmax/internal/transport/http"
 	"net/http"
 	"os"
 	"os/signal"
@@ -71,7 +71,7 @@ func (app *App) Start() <-chan error {
 	var errc = make(chan error, 1)
 
 	router := gin.Default()
-	http2.HTTPHandler(router)
+	transport.HttpHandler(router)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,

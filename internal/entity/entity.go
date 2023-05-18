@@ -1,16 +1,18 @@
 package entity
 
 type Animal struct {
-	ID          int64
-	Age         int8
-	Name        string
-	Sex         int64
-	Type        string
-	Description string
-	Sterilized  bool
-	Vaccinated  bool
-	Shelter     string
-	Photo       string
+	ID          int64    `json:"id"`
+	Age         int8     `json:"age"`
+	Name        string   `json:"name"`
+	Sex         int64    `json:"sex"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	Sterilized  bool     `json:"sterilized"`
+	Vaccinated  bool     `json:"vaccinated"`
+	OnRainbow   bool     `json:"on_rainbow"`
+	OnHappiness bool     `json:"on_happiness"`
+	Shelter     string   `json:"shelter"`
+	Photos      []string `json:"Photos"`
 }
 
 type AnimalCreateRequest struct {

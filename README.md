@@ -8,7 +8,7 @@ scp  -r  /home/s228620/GolandProjects/pet/miomi/config   root@178.172.172.30:/us
 MINIO_ROOT_USER=admin MINIO_ROOT_PASSWORD=minio3000 minio server /mnt/data --console-address ":9001"
 
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o miomi
-
+@miomi3000
 mysql_dsn: "root:@Miomi3000@tcp(localhost:3306)/miomi?parseTime=true"
 
 /etc/nginx/conf.d/*.conf;

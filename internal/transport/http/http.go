@@ -22,7 +22,7 @@ func HttpHandler(router *gin.Engine) {
 
 	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
-	animalGroup.GET("/", getAllUsersDHandler)
+	animalGroup.GET("/", getAllAnimalsHandler)
 	animalGroup.POST("/:id", createAnimalHandler)
 	animalGroup.POST("/update/:id", updateAnimalHandler)
 
@@ -84,9 +84,25 @@ func updateUserHandler(c *gin.Context) {
 
 /* ============================== ANIMALS ======================================= */
 func getAnimalByIDHandler(c *gin.Context) {
+	id := c.Param("id")
+	uID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	animals, err := application.AnimalByID(tctx, uID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, animals)
 }
-func getAllUsersDHandler(c *gin.Context) {
-	animals, err := application.AnimalsAll(context.Background())
+func getAllAnimalsHandler(c *gin.Context) {
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	animals, err := application.AnimalsAll(tctx)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -102,27 +118,14 @@ func updateAnimalHandler(c *gin.Context) {
 
 /* ============================== SHELTERS ======================================= */
 func getShelterByIDHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
 }
 func getAllSheltersHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
 }
 func createShelterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})
 }
 func updateShelterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})
-}
-
-func animalsInfo(c *gin.Context) {
-	animalinfo1, err := mysql.GetAnimalBasicInfo(context.Background(), 1)
-	animalinfo2, err := mysql.GetAnimalBasicInfo(context.Background(), 2)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	animal1 := fmt.Sprintf("%+v", animalinfo1)
-	animal2 := fmt.Sprintf("%+v", animalinfo2)
-	c.String(http.StatusOK, animal1)
-	c.String(http.StatusOK, animal2)
 }

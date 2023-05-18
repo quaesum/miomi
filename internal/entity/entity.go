@@ -11,8 +11,8 @@ type Animal struct {
 	Vaccinated  bool     `json:"vaccinated"`
 	OnRainbow   bool     `json:"on_rainbow"`
 	OnHappiness bool     `json:"on_happiness"`
-	Shelter     string   `json:"shelter"`
-	Photos      []string `json:"Photos"`
+	Shelter     string   `json:"shelter,omitempty"`
+	Photos      []string `json:"photos,omitempty"`
 }
 
 type AnimalCreateRequest struct {

@@ -19,3 +19,6 @@ func UserByID(ctx context.Context, id int64) (*entity.User, error) {
 func AnimalsAll(ctx context.Context) ([]entity.Animal, error) {
 	return mysql.GetAllAnimals(ctx)
 }
+func AnimalByID(ctx context.Context, id int64) (*entity.Animal, error) {
+	return mysql.GetAnimalBasicInfo(ctx, id)
+}

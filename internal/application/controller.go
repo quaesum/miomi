@@ -22,3 +22,7 @@ func AnimalsAll(ctx context.Context) ([]entity.Animal, error) {
 func AnimalByID(ctx context.Context, id int64) (*entity.Animal, error) {
 	return mysql.GetAnimalBasicInfo(ctx, id)
 }
+
+func NewsAll(ctx context.Context) ([]entity.News, error) {
+	return mysql.GetNewsInfo(ctx)
+}

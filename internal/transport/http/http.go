@@ -2,10 +2,8 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"madmax/internal/application"
-	"madmax/internal/application/db/mysql"
 	"madmax/internal/entity"
 	"net/http"
 	"strconv"
@@ -35,6 +33,9 @@ func HttpHandler(router *gin.Engine) {
 	adminGroup := api.Group("/admin/v1")
 	adminGroup.Use(AdminTokenCheck()).POST("/user-update/:id", createShelterHandler)
 	adminGroup.Use(AdminTokenCheck()).POST("/user-block/:id", updateShelterHandler)
+
+	newsGroup := api.Group("/news/v1")
+	newsGroup.GET("/", getAllNewsHandler)
 }
 
 /* ==================================== USERS =========================================== */
@@ -50,7 +51,7 @@ func getUserByIDHandler(c *gin.Context) {
 	application.UserByID(tctx, uID)
 }
 
-func basicInfoHandler(c *gin.Context) {
+/*func basicInfoHandler(c *gin.Context) {
 	userinfo, err := mysql.GetUserBasicInfo(context.Background(), 1)
 
 	if err != nil {
@@ -62,7 +63,7 @@ func basicInfoHandler(c *gin.Context) {
 
 	c.String(http.StatusOK, send)
 
-}
+}*/
 
 func userSignupHandler(c *gin.Context) {
 	var ucr entity.UserCreateRequest
@@ -128,4 +129,16 @@ func createShelterHandler(c *gin.Context) {
 }
 func updateShelterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})
+}
+
+/* =============================== NEWS ========================================= */
+func getAllNewsHandler(c *gin.Context) {
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	news, err := application.NewsAll(tctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, news)
 }

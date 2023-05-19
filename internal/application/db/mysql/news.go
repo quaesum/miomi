@@ -2,22 +2,21 @@ package mysql
 
 import (
 	"context"
-	"fmt"
 	"madmax/internal/entity"
 )
 
 func GetNewsInfo(ctx context.Context) ([]entity.News, error) {
 	rows, err := mioDB.QueryContext(ctx, `
-SELECT N.id, N.label, N.description, NP.photoID,
-FROM 
-    news AS N
-	INNER JOIN news_photos AS NP
+SELECT N.id, N.label, N.description, P.filename
+FROM news AS N
+  INNER JOIN photos AS P 
+  LEFT JOIN news_photos AS NP ON N.id = NP.newsID AND P.id = NP.photoID
 WHERE N.id = NP.newsID
 GROUP BY 
     N.id, 
     N.label, 
     N.description, 
-    NP.photoID
+    P.filename
 `)
 	if err != nil {
 		return nil, err
@@ -32,7 +31,6 @@ GROUP BY
 			&newOne.Photo,
 		)
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		news = append(news, newOne)

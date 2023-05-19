@@ -42,7 +42,7 @@ type ShelterCreateRequest struct {
 
 type News struct {
 	ID          int64  `json:"id"`
-	Label       int64  `json:"label"`
+	Label       string `json:"label"`
 	Description string `json:"description"`
 	Photo       string `json:"photo,omitempty"`
 }

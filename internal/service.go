@@ -71,7 +71,7 @@ func (app *App) Start() <-chan error {
 	var errc = make(chan error, 1)
 
 	router := gin.Default()
-	transport.HttpHandler(router)
+	transport.HandlerHTTP(router)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,

@@ -35,7 +35,7 @@ INSERT INTO volunteers
 	return res.LastInsertId()
 }
 
-func UpdateUserByID(ctx context.Context, userID int64) (*entity.User, error) {
+func GetUserByID(ctx context.Context, userID int64) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
 SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt
   FROM users AS U
@@ -48,7 +48,7 @@ SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt
 	return info, err
 }
 
-func UpdateUserByEmail(ctx context.Context, email string) (*entity.User, error) {
+func GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
 SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt
   FROM users AS U
@@ -58,6 +58,9 @@ SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt
 		&info.ID, &info.LastName, &info.FirstName, &info.Password,
 		&info.Email, &info.CreatedAt,
 	)
+	if err != nil {
+		return nil, err
+	}
 	return info, err
 }
 

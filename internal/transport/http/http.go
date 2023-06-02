@@ -10,8 +10,11 @@ import (
 	"time"
 )
 
-func HttpHandler(router *gin.Engine) {
+func HandlerHTTP(router *gin.Engine) {
 	api := router.Group("/api")
+	api.POST("/login", userLoginHandler)
+	api.POST("/signup", userSignupHandler)
+
 	userGroup := api.Group("/user/v1")
 	userGroup.GET("/:id", getUserByIDHandler)
 	userGroup.GET("/", getAllUsersHandler)
@@ -71,7 +74,22 @@ func userSignupHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	_, err := application.UserCreate(tctx, &ucr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 }
+func userLoginHandler(c *gin.Context) {
+	var ucr entity.UserCreateRequest
+	if err := c.ShouldBindJSON(&ucr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+}
+
 func getAllUsersHandler(c *gin.Context) {
 }
 func updateUserHandler(c *gin.Context) {

@@ -8,11 +8,15 @@ type User struct {
 	CreatedAt int64
 	Email     string
 }
+
 type UserCreateRequest struct {
-	FirstName string
-	LastName  string
-	Password  string
-	Email     string
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Password  string `json:"password"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Address   string `json:"address"`
+	ShelterID int64  `json:"shelter_id"`
 }
 
 type UserUpdateRequest struct {

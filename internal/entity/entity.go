@@ -26,20 +26,6 @@ type AnimalCreateRequest struct {
 	Shelter     int64
 }
 
-type Shelter struct {
-	ID          int64
-	Logo        string
-	Name        string
-	Location    string
-	Description string
-}
-type ShelterCreateRequest struct {
-	Logo        string
-	Name        string
-	Location    string
-	Description string
-}
-
 type News struct {
 	ID          int64  `json:"id"`
 	Label       string `json:"label"`

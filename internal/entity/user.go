@@ -7,6 +7,7 @@ type User struct {
 	Password  string `json:"-"`
 	CreatedAt int64
 	Email     string
+	Role      string
 }
 
 type UserCreateRequest struct {
@@ -17,6 +18,11 @@ type UserCreateRequest struct {
 	Phone     string `json:"phone"`
 	Address   string `json:"address"`
 	ShelterID int64  `json:"shelter_id"`
+}
+
+type UserLogInRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type UserUpdateRequest struct {

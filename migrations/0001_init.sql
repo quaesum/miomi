@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS volunteers(
     firstName varchar(35) DEFAULT NULL,
     lastName varchar(35) DEFAULT NULL,
     password varchar(255) DEFAULT NULL,
+    user_role varchar(35) DEFAULT NULL,
     email  VARCHAR(256)  DEFAULT '',
     deactevated bool DEFAULT FALSE,
     createdAt int(11) DEFAULT NULL

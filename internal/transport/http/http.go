@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"madmax/internal/application"
 	"madmax/internal/entity"
+	"madmax/internal/utils"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,9 +18,9 @@ func HandlerHTTP(router *gin.Engine) {
 
 	userGroup := api.Group("/user/v1")
 	userGroup.GET("/:id", getUserByIDHandler)
-	userGroup.GET("/", getAllUsersHandler)
-	userGroup.POST("/signup", userSignupHandler)
-	userGroup.POST("/:id", updateUserHandler)
+	userGroup.GET("/all", getAllUsersHandler)
+	userGroup.GET("/info", getUserInfoHandler)
+	userGroup.POST("/update", updateUserHandler)
 
 	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
@@ -54,20 +55,6 @@ func getUserByIDHandler(c *gin.Context) {
 	application.UserByID(tctx, uID)
 }
 
-/*func basicInfoHandler(c *gin.Context) {
-	userinfo, err := mysql.GetUserBasicInfo(context.Background(), 1)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	fmt.Println(userinfo)
-	send := fmt.Sprintf("%+v", userinfo)
-
-	c.String(http.StatusOK, send)
-
-}*/
-
 func userSignupHandler(c *gin.Context) {
 	var ucr entity.UserCreateRequest
 	if err := c.ShouldBindJSON(&ucr); err != nil {
@@ -76,29 +63,70 @@ func userSignupHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	_, err := application.UserCreate(tctx, &ucr)
+	token, err := application.UserCreate(tctx, &ucr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	c.JSON(200, gin.H{"data": token})
+
 }
 func userLoginHandler(c *gin.Context) {
-	var ucr entity.UserCreateRequest
-	if err := c.ShouldBindJSON(&ucr); err != nil {
+	var ul entity.UserLogInRequest
+	if err := c.ShouldBindJSON(&ul); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	token, err := application.LogIn(tctx, ul.Email, ul.Password)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"data": token})
 }
 
 func getAllUsersHandler(c *gin.Context) {
 }
 func updateUserHandler(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	var ucr entity.UserCreateRequest
 	if err := c.ShouldBindJSON(&ucr); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	err = application.UserUpdate(tctx, userID, &ucr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{})
+}
+
+func getUserInfoHandler(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+
+	user, err := application.UserByID(tctx, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"data": user})
+
 }
 
 /* ============================== ANIMALS ======================================= */

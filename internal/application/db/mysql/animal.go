@@ -85,7 +85,9 @@ SELECT
   A.description, 
   A.sterilized, 
   A.vaccinated, 
-  SH.shelter_name, 
+  SH.shelter_name,
+  SH.adress,
+  SH.phone,
   A.onrainbow, 
   A.onhappines, 
   GROUP_CONCAT(
@@ -117,7 +119,9 @@ GROUP BY
   A.description, 
   A.sterilized, 
   A.vaccinated, 
-  SH.shelter_name, 
+  SH.shelter_name,
+  SH.adress,
+  SH.phone,
   A.onrainbow, 
   A.onhappines
 `)
@@ -139,6 +143,8 @@ GROUP BY
 			&animal.Sterilized,
 			&animal.Vaccinated,
 			&animal.Shelter,
+			&animal.Address,
+			&animal.Phone,
 			&animal.OnRainbow,
 			&animal.OnHappiness,
 			&photos,

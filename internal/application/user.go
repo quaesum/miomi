@@ -13,7 +13,7 @@ import (
 
 func UserCreate(ctx context.Context, userData *entity.UserCreateRequest) (string, error) {
 	_, err := mysql.GetUserByEmail(ctx, userData.Email)
-	if err != nil && err == sql.ErrNoRows {
+	if err != sql.ErrNoRows {
 		return "", errors.New("user exist")
 	}
 	if userData.ShelterID == 0 {

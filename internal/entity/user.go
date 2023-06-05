@@ -5,7 +5,7 @@ type User struct {
 	FirstName string
 	LastName  string
 	Password  string `json:"-"`
-	CreatedAt int64
+	CreatedAt string
 	Email     string
 	Role      string
 }

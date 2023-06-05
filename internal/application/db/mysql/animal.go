@@ -88,6 +88,7 @@ SELECT
   SH.shelter_name,
   SH.adress,
   SH.phone,
+  SH.id,
   A.onrainbow, 
   A.onhappines, 
   GROUP_CONCAT(
@@ -122,6 +123,7 @@ GROUP BY
   SH.shelter_name,
   SH.adress,
   SH.phone,
+  SH.id,
   A.onrainbow, 
   A.onhappines
 `)
@@ -145,6 +147,7 @@ GROUP BY
 			&animal.Shelter,
 			&animal.Address,
 			&animal.Phone,
+			&animal.ShelterId,
 			&animal.OnRainbow,
 			&animal.OnHappiness,
 			&photos,

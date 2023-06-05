@@ -71,6 +71,7 @@ func (app *App) Start() <-chan error {
 	var errc = make(chan error, 1)
 
 	router := gin.Default()
+	router.Use(transport.GinMiddleware("http://localhost:3000"))
 	transport.HandlerHTTP(router)
 	srv := &http.Server{
 		Addr:    ":8080",

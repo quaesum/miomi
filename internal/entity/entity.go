@@ -12,6 +12,7 @@ type Animal struct {
 	OnRainbow   bool     `json:"on_rainbow"`
 	OnHappiness bool     `json:"on_happiness"`
 	Shelter     string   `json:"shelter"`
+	ShelterId   int64    `json:"shelterId"`
 	Photos      []string `json:"photos"`
 	Address     string   `json:"adress"`
 	Phone       string   `json:"phone"`
@@ -33,4 +34,5 @@ type News struct {
 	Label       string `json:"label"`
 	Description string `json:"description"`
 	Photo       string `json:"photo,omitempty"`
+	CreatedAt   string `json:"created_at"`
 }

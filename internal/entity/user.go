@@ -1,13 +1,13 @@
 package entity
 
 type User struct {
-	ID        int64
-	FirstName string
-	LastName  string
+	ID        int64  `json:"id"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
 	Password  string `json:"-"`
-	CreatedAt int64
-	Email     string
-	Role      string
+	CreatedAt int64  `json:"createdAt"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
 }
 
 type UserCreateRequest struct {

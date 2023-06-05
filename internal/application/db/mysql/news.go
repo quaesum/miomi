@@ -3,11 +3,12 @@ package mysql
 import (
 	"context"
 	"madmax/internal/entity"
+	"time"
 )
 
 func GetNewsInfo(ctx context.Context) ([]entity.News, error) {
 	rows, err := mioDB.QueryContext(ctx, `
-SELECT N.id, N.label, N.description, P.filename
+SELECT N.id, N.label, N.description, P.filename, N.created_at
 FROM news AS N
   INNER JOIN photos AS P 
   LEFT JOIN news_photos AS NP ON N.id = NP.newsID AND P.id = NP.photoID
@@ -16,7 +17,8 @@ GROUP BY
     N.id, 
     N.label, 
     N.description, 
-    P.filename
+    P.filename,
+    N.created_at
 `)
 	if err != nil {
 		return nil, err
@@ -24,12 +26,15 @@ GROUP BY
 	var news []entity.News
 	for rows.Next() {
 		var newOne entity.News
-		err := rows.Scan(
+		var createdAt int64
+		err = rows.Scan(
 			&newOne.ID,
 			&newOne.Label,
 			&newOne.Description,
 			&newOne.Photo,
+			&createdAt,
 		)
+		newOne.CreatedAt = time.Unix(createdAt, 0).Format("02.01.2006")
 		if err != nil {
 			return nil, err
 		}

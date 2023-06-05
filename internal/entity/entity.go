@@ -13,6 +13,8 @@ type Animal struct {
 	OnHappiness bool     `json:"on_happiness"`
 	Shelter     string   `json:"shelter"`
 	Photos      []string `json:"photos"`
+	Address     string   `json:"adress"`
+	Phone       string   `json:"phone"`
 }
 
 type AnimalCreateRequest struct {

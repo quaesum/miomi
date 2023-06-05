@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"madmax/internal/entity"
+	"time"
 )
 
 func CreateUser(ctx context.Context, info *entity.User) (int64, error) {
@@ -41,10 +42,12 @@ SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_
   FROM volunteers AS U
  WHERE U.id = ?`, userID)
 	info := new(entity.User)
+	var createdAt int64
 	err := row.Scan(
 		&info.ID, &info.FirstName, &info.LastName, &info.Password,
-		&info.Email, &info.CreatedAt, &info.Role,
+		&info.Email, &createdAt, &info.Role,
 	)
+	info.CreatedAt = time.Unix(createdAt, 0).Format(time.RFC3339)
 	return info, err
 }
 
@@ -54,10 +57,12 @@ SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_
   FROM volunteers AS U
  WHERE U.email = ?`, email)
 	info := new(entity.User)
+	var createdAt int64
 	err := row.Scan(
 		&info.ID, &info.FirstName, &info.LastName, &info.Password,
-		&info.Email, &info.CreatedAt, &info.Role,
+		&info.Email, &createdAt, &info.Role,
 	)
+	info.CreatedAt = time.Unix(createdAt, 0).Format(time.RFC3339)
 	if err != nil {
 		return nil, err
 	}

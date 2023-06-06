@@ -30,8 +30,8 @@ func HandlerHTTP(router *gin.Engine) {
 
 	shelterGroup := api.Group("/shelter/v1")
 	shelterGroup.GET("/:id", getShelterByIDHandler)
-	shelterGroup.GET("/", getAllSheltersHandler)
-	shelterGroup.POST("/:id", createShelterHandler)
+	shelterGroup.GET("/all", getAllSheltersHandler)
+	shelterGroup.POST("/add", createShelterHandler)
 	shelterGroup.POST("/update/:id", updateShelterHandler)
 
 	adminGroup := api.Group("/admin/v1")
@@ -45,14 +45,28 @@ func HandlerHTTP(router *gin.Engine) {
 /* ==================================== USERS =========================================== */
 func getUserByIDHandler(c *gin.Context) {
 	id := c.Param("id")
-	uID, err := strconv.ParseInt(id, 10, 64)
+	userID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Minute*2)
-	application.UserByID(tctx, uID)
+	user, err := application.UserByID(tctx, userID)
+	if err != nil {
+		id := c.Param("id")
+		uID, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ctx := context.Background()
+		tctx, _ := context.WithTimeout(ctx, time.Minute*2)
+		application.UserByID(tctx, uID)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"data": user})
 }
 
 func userSignupHandler(c *gin.Context) {
@@ -165,10 +179,30 @@ func updateAnimalHandler(c *gin.Context) {
 
 /* ============================== SHELTERS ======================================= */
 func getShelterByIDHandler(c *gin.Context) {
-	c.JSON(200, gin.H{})
+	id := c.Param("id")
+	userID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Minute*2)
+	user, err := application.ShelterByID(tctx, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"data": user})
 }
 func getAllSheltersHandler(c *gin.Context) {
-	c.JSON(200, gin.H{})
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	animals, err := application.SheltersAll(tctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, animals)
 }
 func createShelterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})

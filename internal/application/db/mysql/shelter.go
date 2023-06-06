@@ -28,3 +28,37 @@ INSERT INTO volunteers_on_shelters
 `, userID, shelterID)
 	return err
 }
+
+func GetShelterByID(ctx context.Context, shelterID int64) (*entity.Shelter, error) {
+	row := mioDB.QueryRowContext(ctx, `
+SELECT SH.id, SH.shelter_name, SH.description, SH.logo, SH.phone, SH.adress
+  FROM animal_shelters AS SH 
+ WHERE SH.id = ?`, shelterID)
+	info := new(entity.Shelter)
+	err := row.Scan(
+		&info.ID, &info.Name, &info.Description, &info.Logo, &info.Phone, &info.Address,
+	)
+	return info, err
+}
+func GetAllShelters(ctx context.Context) ([]entity.Shelter, error) {
+	rows, err := mioDB.QueryContext(ctx, `
+SELECT SH.id, SH.shelter_name, SH.description, SH.logo, SH.phone, SH.adress
+  FROM animal_shelters AS SH
+`)
+	if err != nil {
+		return nil, err
+	}
+	var shelters []entity.Shelter
+	for rows.Next() {
+		var info entity.Shelter
+		err := rows.Scan(
+			&info.ID, &info.Name, &info.Description, &info.Logo, &info.Phone, &info.Address,
+		)
+		if err != nil {
+			return nil, err
+		}
+		shelters = append(shelters, info)
+	}
+
+	return shelters, nil
+}

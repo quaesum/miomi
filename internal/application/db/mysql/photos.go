@@ -27,3 +27,15 @@ SELECT P.filename
 
 	return files, err
 }
+
+func CreateFile(ctx context.Context, name string) (int64, error) {
+	res, err := mioDB.ExecContext(ctx, `
+INSERT INTO miomi.photos
+(filename, origin, file_type)
+VALUES(?, '', '');
+`, name)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}

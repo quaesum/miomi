@@ -2,12 +2,16 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"madmax/internal/application"
 	"madmax/internal/entity"
 	"madmax/internal/utils"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -40,6 +44,9 @@ func HandlerHTTP(router *gin.Engine) {
 
 	newsGroup := api.Group("/news/v1")
 	newsGroup.GET("/", getAllNewsHandler)
+
+	fileGroup := api.Group("/file/v1")
+	fileGroup.POST("/add", attachFileHandler)
 }
 
 /* ==================================== USERS =========================================== */
@@ -239,4 +246,37 @@ func getAllNewsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, news)
+}
+
+/* =============================== FILES ========================================= */
+func attachFileHandler(c *gin.Context) {
+	_, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	file, err := c.FormFile("file")
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "No file is received",
+		})
+		return
+	}
+
+	// Retrieve file information
+	newFileName := uuid.New().String()
+	ctx := context.Background()
+	f, err := file.Open()
+
+	resp, err := application.AddAnimalsFile(ctx, file.Size, fmt.Sprintf("%s%s", newFileName, strings.ToLower(filepath.Ext(file.Filename))), f)
+	if err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	}
+	c.JSON(200, gin.H{
+		"data": resp,
+	})
 }

@@ -137,3 +137,30 @@ GROUP BY
 
 	return animals, nil
 }
+
+func CreateAnimal(ctx context.Context, animal *entity.AnimalCreateRequest) (int64, error) {
+	res, err := mioDB.ExecContext(ctx, `
+INSERT INTO animals  
+		SET  age = ?,
+		  	name = ?,
+ 			sex = ?,
+   			description = ?,
+            sterilized = ?,
+            vaccinated = ?
+`, animal.Age, animal.Name, animal.Sex, animal.Description, animal.Sterilized, animal.Vaccinated)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+func AddAnimalOnType(ctx context.Context, typeID, animalID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+INSERT INTO animals_on_types
+(animal_typeID, animalID)
+VALUES(?, ?);
+`, typeID, animalID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

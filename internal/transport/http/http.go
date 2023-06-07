@@ -25,7 +25,7 @@ func HandlerHTTP(router *gin.Engine) {
 	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
 	animalGroup.GET("/", getAllAnimalsHandler)
-	animalGroup.POST("/:id", createAnimalHandler)
+	animalGroup.POST("/add", createAnimalHandler)
 	animalGroup.POST("/update/:id", updateAnimalHandler)
 
 	shelterGroup := api.Group("/shelter/v1")
@@ -171,7 +171,25 @@ func getAllAnimalsHandler(c *gin.Context) {
 	c.JSON(200, animals)
 }
 func createAnimalHandler(c *gin.Context) {
-	c.JSON(200, gin.H{})
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var ucr entity.AnimalCreateRequest
+	if err := c.ShouldBindJSON(&ucr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	animalID, err := application.AnimalCreate(tctx, userID, &ucr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"id": animalID})
 }
 func updateAnimalHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})

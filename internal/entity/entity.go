@@ -19,14 +19,15 @@ type Animal struct {
 }
 
 type AnimalCreateRequest struct {
-	Age         int64
-	Name        string
-	Sex         int64
-	Type        string
-	Description string
-	Sterilized  bool
-	Vaccinated  bool
-	Shelter     int64
+	Age         int8    `json:"age"`
+	Name        string  `json:"name"`
+	Sex         int64   `json:"sex"`
+	Type        int64   `json:"type"`
+	Description string  `json:"description"`
+	Sterilized  bool    `json:"sterilized"`
+	Vaccinated  bool    `json:"vaccinated"`
+	ShelterId   int64   `json:"shelterId"`
+	Photos      []int64 `json:"photos"`
 }
 
 type News struct {

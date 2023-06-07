@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"madmax/internal/entity"
 )
@@ -42,8 +43,9 @@ GROUP BY
   A.sterilized, 
   A.vaccinated, 
   SH.shelter_name, 
-  A.onrainbow, 
-  A.onhappines`, animalID)
+  IFNULL(A.onrainbow, false) AS messengers, 
+  IFNULL(A.onhappines, false) AS messengers
+  `, animalID)
 	animal := new(entity.Animal)
 	err := row.Scan(
 		&animal.ID,
@@ -76,8 +78,8 @@ SELECT
   SH.adress,
   SH.phone,
   SH.id,
-  A.onrainbow, 
-  A.onhappines
+  IFNULL(A.onrainbow, false) AS messengers, 
+  IFNULL(A.onhappines, false) AS messengers
 FROM 
   animals AS A 
   INNER JOIN animal_types AS ANT 
@@ -132,6 +134,11 @@ GROUP BY
 			fmt.Println(err)
 			return nil, err
 		}
+		photos, err := GetPhotosByAnimalID(ctx, animal.ID)
+		if err != nil && err != sql.ErrNoRows {
+			fmt.Println(err)
+		}
+		animal.Photos = photos
 		animals = append(animals, animal)
 	}
 

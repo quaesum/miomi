@@ -64,3 +64,14 @@ func AddNewsPhoto(ctx context.Context, newsId, photoId int64) error {
 `, newsId, photoId)
 	return err
 }
+
+func RemoveNewsByID(ctx context.Context, newsId int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+DELETE FROM miomi.news
+WHERE id = ?
+`, newsId)
+	if err != nil {
+		return err
+	}
+	return nil
+}

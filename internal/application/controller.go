@@ -31,3 +31,11 @@ func NewsCreate(ctx context.Context, userID int64, newsData *entity.NewsCreateRe
 	}
 	return newsId, nil
 }
+
+func RemoveNewsById(ctx context.Context, id int64) error {
+	err := mysql.RemoveNewsByID(ctx, id)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	return nil
+}

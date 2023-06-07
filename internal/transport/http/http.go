@@ -46,6 +46,7 @@ func HandlerHTTP(router *gin.Engine) {
 	newsGroup := api.Group("/news/v1")
 	newsGroup.GET("/", getAllNewsHandler)
 	newsGroup.POST("/add", createNewsHandler)
+	newsGroup.POST("/remove/:id", removeNewsHandler)
 
 	fileGroup := api.Group("/file/v1")
 	fileGroup.POST("/add", attachFileHandler)
@@ -293,6 +294,28 @@ func createNewsHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"id": newsId})
+}
+
+func removeNewsHandler(c *gin.Context) {
+	_, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id := c.Param("id")
+	newsId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	err = application.RemoveNewsById(tctx, newsId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{})
 }
 
 /* =============================== FILES ========================================= */

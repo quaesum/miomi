@@ -37,3 +37,9 @@ type News struct {
 	Photo       string `json:"photo,omitempty"`
 	CreatedAt   string `json:"created_at"`
 }
+
+type NewsCreateRequest struct {
+	Label       string `json:"label"`
+	Description string `json:"description"`
+	Photo       int64  `json:"photo"`
+}

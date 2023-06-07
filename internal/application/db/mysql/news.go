@@ -42,3 +42,25 @@ GROUP BY
 	}
 	return news, nil
 }
+
+func CreateNews(ctx context.Context, news *entity.NewsCreateRequest) (int64, error) {
+	res, err := mioDB.ExecContext(ctx, `
+INSERT INTO news
+	SET label = ?,
+	description = ?,
+	created_at = UNIX_TIMESTAMP()
+	`, news.Label, news.Description)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func AddNewsPhoto(ctx context.Context, newsId, photoId int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+	INSERT INTO news_photos
+	(newsId, photoId)
+	VALUES (?,?);
+`, newsId, photoId)
+	return err
+}

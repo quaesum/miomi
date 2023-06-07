@@ -146,14 +146,14 @@ func getUserInfoHandler(c *gin.Context) {
 /* ============================== ANIMALS ======================================= */
 func getAnimalByIDHandler(c *gin.Context) {
 	id := c.Param("id")
-	uID, err := strconv.ParseInt(id, 10, 64)
+	animalID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	animals, err := application.AnimalByID(tctx, uID)
+	animals, err := application.AnimalByID(tctx, animalID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

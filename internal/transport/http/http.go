@@ -31,6 +31,7 @@ func HandlerHTTP(router *gin.Engine) {
 	animalGroup.GET("/", getAllAnimalsHandler)
 	animalGroup.POST("/add", createAnimalHandler)
 	animalGroup.POST("/update/:id", updateAnimalHandler)
+	animalGroup.POST("/remove/:id", removeAnimalHandler)
 
 	shelterGroup := api.Group("/shelter/v1")
 	shelterGroup.GET("/:id", getShelterByIDHandler)
@@ -199,6 +200,28 @@ func createAnimalHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"id": animalID})
 }
 func updateAnimalHandler(c *gin.Context) {
+	c.JSON(200, gin.H{})
+}
+
+func removeAnimalHandler(c *gin.Context) {
+	_, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id := c.Param("id")
+	animalID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	err = application.RemoveAnimalByID(tctx, animalID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(200, gin.H{})
 }
 

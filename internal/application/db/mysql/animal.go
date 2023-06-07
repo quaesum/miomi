@@ -164,3 +164,15 @@ VALUES(?, ?);
 	}
 	return nil
 }
+
+func RemoveAnimalByID(ctx context.Context, animalID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+DELETE FROM miomi.animals
+WHERE id = ?
+
+`, animalID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -48,3 +48,11 @@ func AnimalByID(ctx context.Context, id int64) (*entity.Animal, error) {
 	animal.Photos = photos
 	return animal, nil
 }
+
+func RemoveAnimalByID(ctx context.Context, id int64) error {
+	err := mysql.RemoveAnimalByID(ctx, id)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	return nil
+}

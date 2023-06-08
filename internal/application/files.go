@@ -51,6 +51,6 @@ func uploadFile(ctx context.Context, fileSize int64, bucket, newName string, fil
 	return nil
 }
 
-func GetFilenameById(ctx context.Context, id int64) (*entity.PhotoRequest, error) {
-	return mysql.GetUrlByID(ctx, id)
+func GetFileNameAndId(ctx context.Context) ([]entity.PhotoRequest, error) {
+	return mysql.GetUrlAndId(ctx)
 }

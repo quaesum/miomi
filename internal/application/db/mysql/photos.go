@@ -41,15 +41,22 @@ VALUES(?, '', '');
 	return res.LastInsertId()
 }
 
-func GetUrlByID(ctx context.Context, id int64) (*entity.PhotoRequest, error) {
-	row := mioDB.QueryRowContext(ctx, `
-SELECT P.filename
+func GetUrlAndId(ctx context.Context) ([]entity.PhotoRequest, error) {
+	rows, err := mioDB.QueryContext(ctx, `
+SELECT P.id,P.filename
 	FROM photos AS P
-	WHERE P.id = ?`, id)
-	res := new(entity.PhotoRequest)
-	err := row.Scan(&res.Filename)
+`)
 	if err != nil {
 		return nil, err
+	}
+	var res []entity.PhotoRequest
+	for rows.Next() {
+		var newOne entity.PhotoRequest
+		err = rows.Scan(&newOne.ID, &newOne.Filename)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, newOne)
 	}
 	return res, nil
 }

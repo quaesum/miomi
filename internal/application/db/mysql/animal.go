@@ -19,8 +19,8 @@ SELECT
   A.sterilized, 
   A.vaccinated, 
   SH.shelter_name, 
-  A.onrainbow, 
-  A.onhappines
+  IFNULL(A.onrainbow, false) AS onrainbow, 
+  IFNULL(A.onhappines, false) AS onhappines
 FROM 
   animals AS A 
   INNER JOIN animal_types AS ANT 
@@ -43,9 +43,8 @@ GROUP BY
   A.sterilized, 
   A.vaccinated, 
   SH.shelter_name, 
-  IFNULL(A.onrainbow, false) AS messengers, 
-  IFNULL(A.onhappines, false) AS messengers
-  `, animalID)
+  A.onrainbow, 
+  A.onhappines`, animalID)
 	animal := new(entity.Animal)
 	err := row.Scan(
 		&animal.ID,
@@ -78,8 +77,8 @@ SELECT
   SH.adress,
   SH.phone,
   SH.id,
-  IFNULL(A.onrainbow, false) AS messengers, 
-  IFNULL(A.onhappines, false) AS messengers
+  IFNULL(A.onrainbow, false) AS onrainbow, 
+  IFNULL(A.onhappines, false) AS onhappines
 FROM 
   animals AS A 
   INNER JOIN animal_types AS ANT 
@@ -153,7 +152,9 @@ INSERT INTO animals
  			sex = ?,
    			description = ?,
             sterilized = ?,
-            vaccinated = ?
+            vaccinated = ?,
+		    onrainbow = false,
+            onhappines  = false
 `, animal.Age, animal.Name, animal.Sex, animal.Description, animal.Sterilized, animal.Vaccinated)
 	if err != nil {
 		return 0, err
@@ -174,10 +175,29 @@ VALUES(?, ?);
 
 func RemoveAnimalByID(ctx context.Context, animalID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
-DELETE FROM miomi.animals
+DELETE FROM animals
 WHERE id = ?
 
 `, animalID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateAnimal(ctx context.Context, animalID int64, animal *entity.AnimalCreateRequest) error {
+	_, err := mioDB.ExecContext(ctx, `
+UPDATE animals
+   SET age = ?,
+	name = ?,
+	sex = ?,
+	description = ?,
+	sterilized = ?,
+	vaccinated = ?,
+    onrainbow = ?,
+    onhappines = ?
+ WHERE id = ? 
+`, animal.Age, animal.Name, animal.Sex, animal.Description, animal.Sterilized, animal.Vaccinated, animal.Onrainbow, animal.Onhappines, animalID)
 	if err != nil {
 		return err
 	}

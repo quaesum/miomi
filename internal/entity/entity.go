@@ -27,6 +27,8 @@ type AnimalCreateRequest struct {
 	Sterilized  bool    `json:"sterilized"`
 	Vaccinated  bool    `json:"vaccinated"`
 	ShelterId   int64   `json:"shelterId"`
+	Onrainbow   bool    `json:"onrainbow"`
+	Onhappines  bool    `json:"onhappines"`
 	Photos      []int64 `json:"photos"`
 }
 

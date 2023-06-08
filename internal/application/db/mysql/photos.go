@@ -39,3 +39,19 @@ VALUES(?, '', '');
 	}
 	return res.LastInsertId()
 }
+
+func RemoveAnimalsPhotos(ctx context.Context, animalID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+DELETE FROM animals_photos
+		WHERE  animalID = ?
+`, animalID)
+	return err
+}
+func AddanimalsPhotos(ctx context.Context, animalID, photoID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+INSERT INTO animals_photos
+(animalID, photoID)
+VALUES(?, ?);
+`, animalID, photoID)
+	return err
+}

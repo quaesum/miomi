@@ -66,17 +66,16 @@ SELECT SH.id, SH.shelter_name, SH.description, SH.logo, SH.phone, SH.adress
 func AddAnimalOnShelter(ctx context.Context, shelterID, animalID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
 INSERT INTO animals_on_shelters
-		SET animalID = ?,
-			shelterID = ?
+(animalID, shelterID)
+VALUES(?, ?);
 `, animalID, shelterID)
 	return err
 }
 
-func AddanimalsPhotos(ctx context.Context, animalID, photoID int64) error {
+func RemoveAnimalOnShelter(ctx context.Context, animalID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
-INSERT INTO animals_photos
-(animalID, photoID)
-VALUES(?, ?);
-`, animalID, photoID)
+DELETE FROM animals_on_shelters
+		WHERE  animalID = ?
+`, animalID)
 	return err
 }

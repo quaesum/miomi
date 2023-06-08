@@ -200,6 +200,30 @@ func createAnimalHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"id": animalID})
 }
 func updateAnimalHandler(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id := c.Param("id")
+	animalID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var ucr entity.AnimalCreateRequest
+	if err := c.ShouldBindJSON(&ucr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	err = application.AnimalUpdate(tctx, userID, animalID, &ucr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{})
 }
 

@@ -14,7 +14,7 @@ type Animal struct {
 	Shelter     string   `json:"shelter"`
 	ShelterId   int64    `json:"shelterId"`
 	Photos      []string `json:"photos"`
-	Address     string   `json:"adress"`
+	Address     string   `json:"address"`
 	Phone       string   `json:"phone"`
 }
 

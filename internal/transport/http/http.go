@@ -45,9 +45,13 @@ func HandlerHTTP(router *gin.Engine) {
 
 	newsGroup := api.Group("/news/v1")
 	newsGroup.GET("/", getAllNewsHandler)
+	newsGroup.POST("/add", createNewsHandler)
+	newsGroup.POST("/remove/:id", removeNewsHandler)
 
 	fileGroup := api.Group("/file/v1")
 	fileGroup.POST("/add", attachFileHandler)
+	fileGroup.POST("/addNews", attachNewsFileHandler)
+	fileGroup.GET("/getUrl", getAllFileNamesAndIdsHandler)
 }
 
 /* ==================================== USERS =========================================== */
@@ -295,6 +299,50 @@ func getAllNewsHandler(c *gin.Context) {
 	c.JSON(200, news)
 }
 
+func createNewsHandler(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var ncr entity.NewsCreateRequest
+	if err := c.ShouldBindJSON(&ncr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	newsId, err := application.NewsCreate(tctx, userID, &ncr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"id": newsId})
+}
+
+func removeNewsHandler(c *gin.Context) {
+	_, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id := c.Param("id")
+	newsId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	err = application.RemoveNewsById(tctx, newsId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{})
+}
+
 /* =============================== FILES ========================================= */
 func attachFileHandler(c *gin.Context) {
 	_, err := utils.GetUserID(c)
@@ -319,11 +367,55 @@ func attachFileHandler(c *gin.Context) {
 	resp, err := application.AddAnimalsFile(ctx, file.Size, fmt.Sprintf("%s%s", newFileName, strings.ToLower(filepath.Ext(file.Filename))), f)
 	if err != nil {
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error add file": err.Error()})
 			return
 		}
 	}
 	c.JSON(200, gin.H{
 		"data": resp,
 	})
+}
+
+func attachNewsFileHandler(c *gin.Context) {
+	_, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	file, err := c.FormFile("file")
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "No file is received",
+		})
+		return
+	}
+
+	// Retrieve file information
+	newFileName := uuid.New().String()
+	ctx := context.Background()
+	f, err := file.Open()
+
+	resp, err := application.AddNewsFile(ctx, file.Size, fmt.Sprintf("%s%s", newFileName, strings.ToLower(filepath.Ext(file.Filename))), f)
+
+	if err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error add file": err.Error()})
+			return
+		}
+	}
+	c.JSON(200, gin.H{
+		"data": resp,
+	})
+}
+
+func getAllFileNamesAndIdsHandler(c *gin.Context) {
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*10)
+	photos, err := application.GetFileNameAndId(tctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, photos)
 }

@@ -14,7 +14,7 @@ type Animal struct {
 	Shelter     string   `json:"shelter"`
 	ShelterId   int64    `json:"shelterId"`
 	Photos      []string `json:"photos"`
-	Address     string   `json:"adress"`
+	Address     string   `json:"address"`
 	Phone       string   `json:"phone"`
 }
 
@@ -38,4 +38,15 @@ type News struct {
 	Description string `json:"description"`
 	Photo       string `json:"photo,omitempty"`
 	CreatedAt   string `json:"created_at"`
+}
+
+type NewsCreateRequest struct {
+	Label       string `json:"label"`
+	Description string `json:"description"`
+	Photo       int64  `json:"photo"`
+}
+
+type PhotoRequest struct {
+	ID       int64  `json:"id"`
+	Filename string `json:"url"`
 }

@@ -38,14 +38,17 @@ UPDATE volunteers
 
 func GetUserByID(ctx context.Context, userID int64) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
-SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_role
+SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_role, ASH.id
   FROM volunteers AS U
+  INNER JOIN animal_shelters as ASH
+  LEFT JOIN volunteers_on_shelters AS VOSH ON U.id = VOSH.volunteerID
+  AND ASH.id = VOSH.shelterID
  WHERE U.id = ?`, userID)
 	info := new(entity.User)
 	var createdAt int64
 	err := row.Scan(
 		&info.ID, &info.FirstName, &info.LastName, &info.Password,
-		&info.Email, &createdAt, &info.Role,
+		&info.Email, &createdAt, &info.Role, &info.ShelterID,
 	)
 	info.CreatedAt = time.Unix(createdAt, 0).Format(time.RFC3339)
 	return info, err

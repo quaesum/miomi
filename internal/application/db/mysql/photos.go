@@ -39,7 +39,6 @@ VALUES(?, '', '');
 	}
 	return res.LastInsertId()
 }
-
 func RemoveAnimalsPhotos(ctx context.Context, animalID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
 DELETE FROM animals_photos
@@ -54,4 +53,24 @@ INSERT INTO animals_photos
 VALUES(?, ?);
 `, animalID, photoID)
 	return err
+}
+
+func GetUrlAndId(ctx context.Context) ([]entity.PhotoRequest, error) {
+	rows, err := mioDB.QueryContext(ctx, `
+SELECT P.id,P.filename
+	FROM photos AS P
+`)
+	if err != nil {
+		return nil, err
+	}
+	var res []entity.PhotoRequest
+	for rows.Next() {
+		var newOne entity.PhotoRequest
+		err = rows.Scan(&newOne.ID, &newOne.Filename)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, newOne)
+	}
+	return res, nil
 }

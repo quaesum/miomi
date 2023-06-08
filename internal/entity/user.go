@@ -8,6 +8,7 @@ type User struct {
 	CreatedAt string `json:"createdAt"`
 	Email     string `json:"email"`
 	Role      string `json:"role"`
+	ShelterID int64  `json:"shelter_id"`
 }
 
 type UserCreateRequest struct {

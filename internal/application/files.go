@@ -7,6 +7,7 @@ import (
 	cr "github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
 	"madmax/internal/application/db/mysql"
+	"madmax/internal/entity"
 )
 
 func AddAnimalsFile(ctx context.Context, fileSize int64, fileName string, file io.Reader) (int64, error) {
@@ -48,4 +49,8 @@ func uploadFile(ctx context.Context, fileSize int64, bucket, newName string, fil
 		return err
 	}
 	return nil
+}
+
+func GetFilenameById(ctx context.Context, id int64) (*entity.PhotoRequest, error) {
+	return mysql.GetUrlByID(ctx, id)
 }

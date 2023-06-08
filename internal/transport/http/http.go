@@ -51,6 +51,7 @@ func HandlerHTTP(router *gin.Engine) {
 	fileGroup := api.Group("/file/v1")
 	fileGroup.POST("/add", attachFileHandler)
 	fileGroup.POST("/addNews", attachNewsFileHandler)
+	fileGroup.POST("/getUrl/:id", getFilenameByIdHandler)
 }
 
 /* ==================================== USERS =========================================== */
@@ -382,4 +383,21 @@ func attachNewsFileHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"data": resp,
 	})
+}
+
+func getFilenameByIdHandler(c *gin.Context) {
+	id := c.Param("id")
+	photoId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*10)
+	filename, err := application.GetFilenameById(tctx, photoId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, filename)
 }

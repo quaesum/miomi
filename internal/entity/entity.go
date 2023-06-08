@@ -43,3 +43,8 @@ type NewsCreateRequest struct {
 	Description string `json:"description"`
 	Photo       int64  `json:"photo"`
 }
+
+type PhotoRequest struct {
+	ID       int64  `json:"id"`
+	Filename string `json:"url"`
+}

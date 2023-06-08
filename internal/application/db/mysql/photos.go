@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"madmax/internal/entity"
 )
 
 func GetPhotosByAnimalID(ctx context.Context, animalID int64) ([]string, error) {
@@ -38,4 +39,17 @@ VALUES(?, '', '');
 		return 0, err
 	}
 	return res.LastInsertId()
+}
+
+func GetUrlByID(ctx context.Context, id int64) (*entity.PhotoRequest, error) {
+	row := mioDB.QueryRowContext(ctx, `
+SELECT P.filename
+	FROM photos AS P
+	WHERE P.id = ?`, id)
+	res := new(entity.PhotoRequest)
+	err := row.Scan(&res.Filename)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

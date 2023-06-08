@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"madmax/internal/entity"
 )
 
 func GetPhotosByAnimalID(ctx context.Context, animalID int64) ([]string, error) {

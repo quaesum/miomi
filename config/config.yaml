@@ -1,2 +1,2 @@
 
-mysql_dsn: "root:password@tcp(localhost:3305)/miomi?parseTime=true"
+mysql_dsn: "root:password@tcp(localhost:3305)/db?parseTime=true"

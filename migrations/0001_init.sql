@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE TABLE IF NOT EXISTS volunteers(
     id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     firstName varchar(35) DEFAULT NULL,
@@ -88,4 +89,18 @@ CREATE TABLE IF NOT EXISTS news_photos (
     CONSTRAINT mi_news_photos_newsID FOREIGN KEY(newsID) REFERENCES news(id) ON DELETE SET NULL,
     CONSTRAINT mi_news_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- +goose Down
+
+DROP TABLE IF EXISTS news_photos;
+DROP TABLE IF EXISTS news;
+DROP TABLE IF EXISTS animals_photos;
+DROP TABLE IF EXISTS photos;
+DROP TABLE IF EXISTS animals_on_types;
+DROP TABLE IF EXISTS animal_types;
+DROP TABLE IF EXISTS animals_on_shelters;
+DROP TABLE IF EXISTS animals;
+DROP TABLE IF EXISTS volunteers_on_shelters;
+DROP TABLE IF EXISTS animal_shelters;
+DROP TABLE IF EXISTS volunteers;
 

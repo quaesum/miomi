@@ -34,7 +34,8 @@ func uploadFile(ctx context.Context, fileSize int64, bucket, newName string, fil
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 	*/
-	minioClient, err := minio.New("miomi.by:9000", &minio.Options{
+	//miomi.by:9000
+	minioClient, err := minio.New("localhost:9000", &minio.Options{
 		Creds:  cr.NewStaticV4("admin", "admin3000", ""),
 		Secure: false,
 		//Transport: tr,

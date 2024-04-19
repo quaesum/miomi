@@ -173,14 +173,32 @@ func getAnimalByIDHandler(c *gin.Context) {
 	c.JSON(200, animals)
 }
 func getAllAnimalsHandler(c *gin.Context) {
-	ctx := context.Background()
-	tctx, _ := context.WithTimeout(ctx, time.Second*15)
-	animals, err := application.AnimalsAll(tctx)
+	page, err := strconv.Atoi(c.GetHeader("x-page"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, animals)
+	page -= 1
+	if page < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "page must be greater than 0"})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	animals, err := application.AnimalsAll(tctx)
+
+	leftBorder := page * 10
+	rightBorder := page*10 + 10
+	if rightBorder > len(animals) {
+		rightBorder = len(animals)
+	}
+
+	result := animals[leftBorder:rightBorder]
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, result)
 }
 func createAnimalHandler(c *gin.Context) {
 	userID, err := utils.GetUserID(c)

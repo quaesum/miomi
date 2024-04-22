@@ -113,7 +113,7 @@ GROUP BY
 	var animals []entity.Animal
 	for rows.Next() {
 		var animal entity.Animal
-		err := rows.Scan(
+		err = rows.Scan(
 			&animal.ID,
 			&animal.Age,
 			&animal.Name,
@@ -202,4 +202,17 @@ UPDATE animals
 		return err
 	}
 	return nil
+}
+
+func GetAnimalsCount() (int64, error) {
+	rows, err := mioDB.Query("SELECT count(*) FROM animals")
+	if err != nil {
+		return 0, err
+	}
+	var count int64
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&count)
+	}
+	return count, nil
 }

@@ -28,7 +28,7 @@ func HandlerHTTP(router *gin.Engine) {
 
 	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
-	animalGroup.GET("/", getAllAnimalsHandler)
+	animalGroup.GET("/", getAnimalsHandler)
 	animalGroup.POST("/add", createAnimalHandler)
 	animalGroup.POST("/update/:id", updateAnimalHandler)
 	animalGroup.POST("/remove/:id", removeAnimalHandler)
@@ -172,33 +172,40 @@ func getAnimalByIDHandler(c *gin.Context) {
 	}
 	c.JSON(200, animals)
 }
-func getAllAnimalsHandler(c *gin.Context) {
-	page, err := strconv.Atoi(c.GetHeader("x-page"))
-	if err != nil {
+
+func getAnimalsHandler(c *gin.Context) {
+	var req entity.AnimalsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
 	}
-	page -= 1
-	if page < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "page must be greater than 0"})
-		return
-	}
+
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*15)
-	animals, err := application.AnimalsAll(tctx)
 
-	leftBorder := page * 10
-	rightBorder := page*10 + 10
-	if rightBorder > len(animals) {
-		rightBorder = len(animals)
+	animals, err := application.GetAllAnimals(tctx)
+	if req.Request != "" {
+		animals, err = application.GetSearchResult(req.Request, animals)
 	}
 
-	result := animals[leftBorder:rightBorder]
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
 	}
-	c.JSON(200, result)
+
+	maxPages, err := application.GetMaxPagesAnimals(len(animals), req.PerPage)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	animals, err = application.GetAnimalsOnCurrentPage(req, animals)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	resp := entity.SearchAnimalsResponse{
+		Animals: animals,
+		MaxPage: maxPages,
+	}
+	c.JSON(200, resp)
 }
 func createAnimalHandler(c *gin.Context) {
 	userID, err := utils.GetUserID(c)

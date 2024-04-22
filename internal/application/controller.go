@@ -6,10 +6,29 @@ import (
 	"errors"
 	"madmax/internal/application/db/mysql"
 	"madmax/internal/entity"
+	"math"
 )
 
-func AnimalsAll(ctx context.Context) ([]entity.Animal, error) {
-	return mysql.GetAllAnimals(ctx)
+func GetAnimalsOnCurrentPage(req entity.AnimalsRequest, animals []entity.Animal) ([]entity.Animal, error) {
+	page := req.Page
+	perPage := req.PerPage
+	page -= 1
+	if page < 0 {
+		return nil, errors.New("page must be greater than 0")
+	}
+
+	leftBorder := page * perPage
+	rightBorder := page*perPage + perPage
+	if rightBorder > int8(len(animals)) {
+		rightBorder = int8(len(animals))
+	}
+
+	return animals[leftBorder:rightBorder], nil
+}
+
+func GetMaxPagesAnimals(length int, perPage int8) (int8, error) {
+	pages := math.Ceil(float64(length) / float64(perPage))
+	return int8(pages), nil
 }
 
 func NewsAll(ctx context.Context) ([]entity.News, error) {

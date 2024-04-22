@@ -16,6 +16,13 @@ type Animal struct {
 	Photos      []string `json:"photos"`
 	Address     string   `json:"address"`
 	Phone       string   `json:"phone"`
+	Score       int64    `json:"score"`
+}
+
+type AnimalsRequest struct {
+	Request string `json:"request"`
+	Page    int8   `json:"page"`
+	PerPage int8   `json:"per_page"`
 }
 
 type AnimalCreateRequest struct {
@@ -49,4 +56,9 @@ type NewsCreateRequest struct {
 type PhotoRequest struct {
 	ID       int64  `json:"id"`
 	Filename string `json:"url"`
+}
+
+type SearchAnimalsResponse struct {
+	Animals []Animal `json:"animals"`
+	MaxPage int8     `json:"max_page"`
 }

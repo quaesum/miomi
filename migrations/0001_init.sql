@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS volunteers(
     firstName varchar(35) DEFAULT NULL,
     lastName varchar(35) DEFAULT NULL,
     password varchar(255) DEFAULT NULL,
-    user_role varchar(35) DEFAULT NULL,
+    role varchar(35) DEFAULT NULL,
     email  VARCHAR(256)  DEFAULT '',
     deactevated bool DEFAULT FALSE,
     createdAt int(11) DEFAULT NULL
@@ -79,8 +79,9 @@ CREATE TABLE IF NOT EXISTS animals_photos (
 CREATE TABLE IF NOT EXISTS news (
     id INT(11) unsigned PRIMARY KEY AUTO_INCREMENT,
     label varchar(256) DEFAULT NULL,
-    description TEXT DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    description TEXT DEFAULT NULL,
+    created_at int(11) DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS news_photos (
     id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -89,6 +90,24 @@ CREATE TABLE IF NOT EXISTS news_photos (
     CONSTRAINT mi_news_photos_newsID FOREIGN KEY(newsID) REFERENCES news(id) ON DELETE SET NULL,
     CONSTRAINT mi_news_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS services (
+    id INT(11) unsigned PRIMARY KEY AUTO_INCREMENT,
+    volunteer_id INT(11) unsigned,
+    label varchar(256) DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    created_at int(11) DEFAULT NULL,
+    deleted_at int(11) DEFAULT NULL,
+    updated_at int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS services_photos (
+    id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    serviceID INT(11) UNSIGNED,
+    photoID INT(11) UNSIGNED,
+    CONSTRAINT mi_services_photos_serviceID FOREIGN KEY(serviceID) REFERENCES services(id) ON DELETE SET NULL,
+    CONSTRAINT mi_services_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- +goose Down
 

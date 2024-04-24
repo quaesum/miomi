@@ -28,7 +28,7 @@ func HandlerHTTP(router *gin.Engine) {
 
 	animalGroup := api.Group("/animal/v1")
 	animalGroup.GET("/:id", getAnimalByIDHandler)
-	animalGroup.GET("/", getAnimalsHandler)
+	animalGroup.POST("/", getAnimalsHandler)
 	animalGroup.POST("/add", createAnimalHandler)
 	animalGroup.POST("/update/:id", updateAnimalHandler)
 	animalGroup.POST("/remove/:id", removeAnimalHandler)
@@ -79,6 +79,7 @@ func getUserByIDHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"data": user})
+	return
 }
 
 func userSignupHandler(c *gin.Context) {
@@ -95,22 +96,23 @@ func userSignupHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"data": token})
-
+	return
 }
 func userLoginHandler(c *gin.Context) {
 	var ul entity.UserLogInRequest
 	if err := c.ShouldBindJSON(&ul); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Проверьте данные"})
 		return
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
 	token, err := application.LogIn(tctx, ul.Email, ul.Password)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неверные данные"})
 		return
 	}
 	c.JSON(200, gin.H{"data": token})
+	return
 }
 
 func getAllUsersHandler(c *gin.Context) {
@@ -135,6 +137,7 @@ func updateUserHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{})
+	return
 }
 
 func getUserInfoHandler(c *gin.Context) {
@@ -152,7 +155,7 @@ func getUserInfoHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"data": user})
-
+	return
 }
 
 /* ============================== ANIMALS ======================================= */
@@ -171,12 +174,16 @@ func getAnimalByIDHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, animals)
+	return
 }
 
 func getAnimalsHandler(c *gin.Context) {
 	var req entity.AnimalsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var err error
+	c.ShouldBindJSON(&req)
+
+	if req.Page <= 0 {
+		req.Page = 1
 	}
 
 	ctx := context.Background()
@@ -189,16 +196,19 @@ func getAnimalsHandler(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	maxPages, err := application.GetMaxPagesAnimals(len(animals), req.PerPage)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	animals, err = application.GetAnimalsOnCurrentPage(req, animals)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	resp := entity.SearchAnimalsResponse{
@@ -206,6 +216,7 @@ func getAnimalsHandler(c *gin.Context) {
 		MaxPage: maxPages,
 	}
 	c.JSON(200, resp)
+	return
 }
 func createAnimalHandler(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
@@ -227,6 +238,7 @@ func createAnimalHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"id": animalID})
+	return
 }
 func updateAnimalHandler(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
@@ -254,6 +266,7 @@ func updateAnimalHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{})
+	return
 }
 
 func removeAnimalHandler(c *gin.Context) {
@@ -276,6 +289,7 @@ func removeAnimalHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{})
+	return
 }
 
 /* ============================== SHELTERS ======================================= */
@@ -294,6 +308,7 @@ func getShelterByIDHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"data": user})
+	return
 }
 func getAllSheltersHandler(c *gin.Context) {
 	ctx := context.Background()
@@ -304,6 +319,7 @@ func getAllSheltersHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, animals)
+	return
 }
 func createShelterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{})
@@ -322,6 +338,7 @@ func getAllNewsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, news)
+	return
 }
 
 func createNewsHandler(c *gin.Context) {
@@ -344,6 +361,7 @@ func createNewsHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"id": newsId})
+	return
 }
 
 func removeNewsHandler(c *gin.Context) {
@@ -366,6 +384,7 @@ func removeNewsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{})
+	return
 }
 
 /* =============================== FILES ========================================= */
@@ -399,6 +418,7 @@ func attachFileHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"data": resp,
 	})
+	return
 }
 
 func attachNewsFileHandler(c *gin.Context) {
@@ -432,6 +452,7 @@ func attachNewsFileHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"data": resp,
 	})
+	return
 }
 
 func getAllFileNamesAndIdsHandler(c *gin.Context) {
@@ -443,4 +464,5 @@ func getAllFileNamesAndIdsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, photos)
+	return
 }

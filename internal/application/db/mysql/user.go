@@ -13,7 +13,7 @@ INSERT INTO volunteers
 			lastName = ?,
 			password  = ?,
 			email  = ?,
-			user_role  = ?,
+			role  = ?,
 			createdAt = UNIX_TIMESTAMP()
 `, info.FirstName, info.LastName, info.Password, info.Email, info.Role)
 	if err != nil {
@@ -38,7 +38,7 @@ UPDATE volunteers
 
 func GetUserByID(ctx context.Context, userID int64) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
-SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_role, ASH.id
+SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.role, ASH.id
   FROM volunteers AS U
   INNER JOIN animal_shelters as ASH
   LEFT JOIN volunteers_on_shelters AS VOSH ON U.id = VOSH.volunteerID
@@ -56,7 +56,7 @@ SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_
 
 func GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
-SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.user_role
+SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.role
   FROM volunteers AS U
  WHERE U.email = ?`, email)
 	info := new(entity.User)

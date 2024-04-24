@@ -21,8 +21,8 @@ type Animal struct {
 
 type AnimalsRequest struct {
 	Request string `json:"request"`
-	Page    int8   `json:"page"`
-	PerPage int8   `json:"per_page"`
+	Page    int    `json:"page"`
+	PerPage int    `json:"per_page"`
 }
 
 type AnimalCreateRequest struct {

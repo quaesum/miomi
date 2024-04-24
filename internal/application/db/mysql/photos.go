@@ -31,7 +31,7 @@ SELECT P.filename
 
 func CreateFile(ctx context.Context, name string) (int64, error) {
 	res, err := mioDB.ExecContext(ctx, `
-INSERT INTO miomi.photos
+INSERT INTO photos
 (filename, origin, file_type)
 VALUES(?, '', '');
 `, name)
@@ -74,4 +74,28 @@ SELECT P.id,P.filename
 		res = append(res, newOne)
 	}
 	return res, nil
+}
+
+func GetPhotosByServiceID(ctx context.Context, serviceID int64) ([]string, error) {
+	rows, err := mioDB.QueryContext(ctx, `
+SELECT P.filename 
+ FROM photos AS P 
+  INNER JOIN service_photos AS PH ON PH.serviceID = ?
+  AND P.id = PH.photoID`, serviceID)
+	if err != nil {
+		return nil, err
+	}
+	var files []string
+	for rows.Next() {
+		var fileName string
+		err := rows.Scan(
+			&fileName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, fileName)
+	}
+
+	return files, err
 }

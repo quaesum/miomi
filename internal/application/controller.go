@@ -19,14 +19,14 @@ func GetAnimalsOnCurrentPage(req entity.AnimalsRequest, animals []entity.Animal)
 
 	leftBorder := page * perPage
 	rightBorder := page*perPage + perPage
-	if rightBorder > int8(len(animals)) {
-		rightBorder = int8(len(animals))
+	if rightBorder > len(animals) {
+		rightBorder = len(animals)
 	}
 
 	return animals[leftBorder:rightBorder], nil
 }
 
-func GetMaxPagesAnimals(length int, perPage int8) (int8, error) {
+func GetMaxPagesAnimals(length int, perPage int) (int8, error) {
 	pages := math.Ceil(float64(length) / float64(perPage))
 	return int8(pages), nil
 }

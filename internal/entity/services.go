@@ -9,11 +9,11 @@ type Service struct {
 	CreatedAt   string   `json:"created_at"`
 	UpdatedAt   string   `json:"updated_at"`
 	DeletedAt   string   `json:"deleted_at"`
+	Score       int64    `json:"score"`
 }
 
-type CreateServiceRequest struct {
-	VolunteerID string   `json:"volunteer_id"`
-	Label       string   `json:"label"`
-	Description string   `json:"description"`
-	Photos      []string `json:"photos"`
+type ServiceCreateRequest struct {
+	Label       string  `json:"label"`
+	Description string  `json:"description"`
+	Photos      []int64 `json:"photos"`
 }

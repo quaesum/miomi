@@ -19,7 +19,52 @@ type Animal struct {
 	Score       int64    `json:"score"`
 }
 
-type AnimalsRequest struct {
+type AnimalCreateBleve struct {
+	Age         int      `json:"age"`
+	Name        string   `json:"name"`
+	Sex         int64    `json:"sex"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	Sterilized  bool     `json:"sterilized"`
+	Vaccinated  bool     `json:"vaccinated"`
+	ShelterId   int64    `json:"shelterId"`
+	Shelter     string   `json:"shelter"`
+	Address     string   `json:"address"`
+	Photos      []string `json:"photos"`
+}
+
+type AnimalsBleve struct {
+	ID          int64    `json:"id"`
+	Age         float64  `json:"age"`
+	Name        string   `json:"name"`
+	Sex         float64  `json:"sex"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	Sterilized  bool     `json:"sterilized"`
+	Vaccinated  bool     `json:"vaccinated"`
+	ShelterId   float64  `json:"shelterId"`
+	Shelter     string   `json:"shelter"`
+	Address     string   `json:"address"`
+	Photos      []string `json:"photos"`
+}
+
+func InserAnimalReqToCreate(req Animal) *AnimalCreateBleve {
+	return &AnimalCreateBleve{
+		Age:         int(req.Age),
+		Name:        req.Name,
+		Sex:         req.Sex,
+		Type:        req.Type,
+		Description: req.Description,
+		Sterilized:  req.Sterilized,
+		Vaccinated:  req.Vaccinated,
+		ShelterId:   req.ShelterId,
+		Shelter:     req.Shelter,
+		Address:     req.Address,
+		Photos:      req.Photos,
+	}
+}
+
+type SearchRequest struct {
 	Request string `json:"request"`
 	Page    int    `json:"page"`
 	PerPage int    `json:"per_page"`
@@ -61,4 +106,18 @@ type PhotoRequest struct {
 type SearchAnimalsResponse struct {
 	Animals []Animal `json:"animals"`
 	MaxPage int8     `json:"max_page"`
+}
+
+type SearchAnimalsResponseV2 struct {
+	Animals []AnimalsBleve `json:"animals"`
+	MaxPage int8           `json:"max_page"`
+}
+
+type SearchServicesResponse struct {
+	Services []Service `json:"serives"`
+	MaxPage  int8      `json:"max_page"`
+}
+type SearchProductsResponse struct {
+	Products []Product `json:"products"`
+	MaxPage  int8      `json:"max_page"`
 }

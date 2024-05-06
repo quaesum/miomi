@@ -63,7 +63,7 @@ func LogIn(ctx context.Context, email, pass string) (string, error) {
 	if utils.GetMD5Hash(pass) != user.Password {
 		return "", errors.New("password does not match")
 	}
-	token, err := utils.GenerateToken(strconv.FormatInt(user.ID, 10), "volunteer")
+	token, err := utils.GenerateToken(strconv.FormatInt(user.ID, 10), user.Role)
 	if err != nil {
 		return "", err
 	}
@@ -89,4 +89,8 @@ func UserUpdate(ctx context.Context, userID int64, userData *entity.UserCreateRe
 		return err
 	}
 	return nil
+}
+
+func GetAllUsers(ctx context.Context) ([]entity.User, error) {
+	return mysql.GetAllUsers(ctx)
 }

@@ -10,23 +10,14 @@ import (
 	"madmax/internal/entity"
 )
 
-func AddAnimalsFile(ctx context.Context, fileSize int64, fileName string, file io.Reader) (int64, error) {
+func AddFile(ctx context.Context, fileSize int64, fileName string, file io.Reader, target string) (int64, error) {
 	fmt.Println(fileSize, fileName)
-	err := uploadFile(ctx, fileSize, "animals", fileName, file)
+	err := uploadFile(ctx, fileSize, target, fileName, file)
 	if err != nil {
 		return 0, err
 	}
+	return mysql.CreateFile(ctx, fmt.Sprintf("/%s/%s", target, fileName))
 
-	return mysql.CreateFile(ctx, fmt.Sprintf("/animals/%s", fileName))
-}
-
-func AddNewsFile(ctx context.Context, fileSize int64, fileName string, file io.Reader) (int64, error) {
-	err := uploadFile(ctx, fileSize, "news", fileName, file)
-	if err != nil {
-		return 0, err
-	}
-
-	return mysql.CreateFile(ctx, fmt.Sprintf("/news/%s", fileName))
 }
 
 func uploadFile(ctx context.Context, fileSize int64, bucket, newName string, file io.Reader) error {

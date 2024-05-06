@@ -4,10 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/blevesearch/bleve"
 	"github.com/gin-gonic/gin"
 	"log"
+	bleve2 "madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
-	transport "madmax/internal/transport/http"
+	"madmax/internal/transport/http/v1"
+	v2 "madmax/internal/transport/http/v2"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,9 +19,12 @@ import (
 
 // App contains all what needs to run the server
 type App struct {
-	HTTPServer http.Server
-	SQLDB      *sql.DB
-	Config     *Config
+	HTTPServer    http.Server
+	SQLDB         *sql.DB
+	Config        *Config
+	BleveProducts bleve.Index
+	BleveAnimals  bleve.Index
+	BleveServices bleve.Index
 }
 
 var application *App
@@ -45,6 +51,20 @@ func NewApp() (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize  mysql client: %w", err)
 	}
+
+	err = bleve2.NewBleve()
+	//app.BleveProducts, err = bleve2.NewBleveProducts()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize  bleve products: %w", err)
+	}
+	//app.BleveAnimals, err = bleve2.NewBleveAnimals()
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to initialize  bleve animals: %w", err)
+	//}
+	//app.BleveServices, err = bleve2.NewBleveServices()
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to initialize  bleve serives: %w", err)
+	//}
 	return app, err
 }
 
@@ -71,8 +91,9 @@ func (app *App) Start() <-chan error {
 	var errc = make(chan error, 1)
 
 	router := gin.Default()
-	router.Use(transport.GinMiddleware("http://localhost:3000"))
-	transport.HandlerHTTP(router)
+	router.Use(v1.GinMiddleware("http://localhost:3000"))
+	v1.HandlerHTTP(router)
+	v2.HandlerHTTP(router)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,

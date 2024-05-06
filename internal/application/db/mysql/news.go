@@ -65,6 +65,19 @@ func AddNewsPhoto(ctx context.Context, newsId, photoId int64) error {
 	return err
 }
 
+func UpdateNews(ctx context.Context, newsID int64, news *entity.NewsCreateRequest) error {
+	_, err := mioDB.ExecContext(ctx, `
+UPDATE animals
+   SET label = ?,
+	description = ?,
+ WHERE id = ? 
+`, news.Label, news.Description, newsID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func RemoveNewsByID(ctx context.Context, newsId int64) error {
 	_, err := mioDB.ExecContext(ctx, `
 DELETE FROM miomi.news

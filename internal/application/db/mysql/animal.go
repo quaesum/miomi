@@ -19,6 +19,8 @@ SELECT
   A.sterilized, 
   A.vaccinated, 
   SH.shelter_name, 
+  SH.adress,
+  SH.id,
   IFNULL(A.onrainbow, false) AS onrainbow, 
   IFNULL(A.onhappines, false) AS onhappines
 FROM 
@@ -43,6 +45,8 @@ GROUP BY
   A.sterilized, 
   A.vaccinated, 
   SH.shelter_name, 
+  SH.adress,
+  SH.id,
   A.onrainbow, 
   A.onhappines`, animalID)
 	animal := new(entity.Animal)
@@ -56,6 +60,8 @@ GROUP BY
 		&animal.Sterilized,
 		&animal.Vaccinated,
 		&animal.Shelter,
+		&animal.Address,
+		&animal.ShelterId,
 		&animal.OnRainbow,
 		&animal.OnHappiness,
 	)

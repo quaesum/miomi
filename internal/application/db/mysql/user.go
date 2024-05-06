@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"context"
+	"fmt"
 	"madmax/internal/entity"
 	"time"
 )
@@ -82,4 +83,44 @@ SELECT U.id, U.name, U.email
 		&user.ID, &user.LastName, &user.Email,
 	)
 	return user, err
+}
+
+func GetAllUsers(ctx context.Context) ([]entity.User, error) {
+	rows, err := mioDB.QueryContext(ctx, `
+SELECT 
+  V.id, 
+  V.firstName, 
+  V.lastName, 
+  V.role, 
+  V.email, 
+FROM 
+  volunteers AS V 
+GROUP BY 
+  V.id, 
+  V.firstName, 
+  V.lastName, 
+  V.role, 
+  V.email, 
+`)
+	if err != nil {
+		return nil, err
+	}
+	var users []entity.User
+	for rows.Next() {
+		var user entity.User
+		err = rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Role,
+			&user.Email,
+		)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
 }

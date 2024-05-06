@@ -18,7 +18,7 @@ SELECT
   IFNULL(S.deleted_at, 0) AS deleted_at, 
   IFNULL(A.updated_at, 0) AS updated_at
 FROM 
-  services AS S 
+  serives AS S 
 WHERE 
   S.id = ?
 GROUP BY 
@@ -60,9 +60,9 @@ SELECT
   S.description, 
   S.created_at, 
   IFNULL(S.deleted_at, 0) AS deleted_at, 
-  IFNULL(A.updated_at, 0) AS updated_at
+  IFNULL(S.updated_at, 0) AS updated_at
 FROM 
-  services AS S 
+  serives AS S 
 GROUP BY 
   S.id, 
   S.volunteer_id, 
@@ -103,14 +103,14 @@ GROUP BY
 	return services, nil
 }
 
-func CreateService(ctx context.Context, service *entity.CreateServiceRequest) (int64, error) {
+func CreateService(ctx context.Context, userID int64, service *entity.ServiceCreateRequest) (int64, error) {
 	res, err := mioDB.ExecContext(ctx, `
-INSERT INTO animals  
+INSERT INTO serives  
 		SET  volunteer_id = ?,
 		  	label = ?,
  			description = ?,
    			created_at = UNIX_TIMESTAMP()
-`, service.VolunteerID, service.Label, service.Description, service.Description)
+`, userID, service.Label, service.Description)
 	if err != nil {
 		return 0, err
 	}
@@ -119,7 +119,7 @@ INSERT INTO animals
 
 func RemoveServiceByID(ctx context.Context, serviceID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
-DELETE FROM services
+DELETE FROM serives
 WHERE id = ?
 
 `, serviceID)
@@ -129,15 +129,15 @@ WHERE id = ?
 	return nil
 }
 
-func UpdateService(ctx context.Context, serviceID int64, service *entity.CreateServiceRequest) error {
+func UpdateService(ctx context.Context, userID, serviceID int64, service *entity.ServiceCreateRequest) error {
 	_, err := mioDB.ExecContext(ctx, `
-UPDATE animals
+UPDATE serives
    SET  volunteer_id = ?,
 		label = ?,
  		description = ?,
         updated_at = UNIX_TIMESTAMP()
  WHERE id = ? 
-`, service.VolunteerID, service.Label, service.Description, serviceID)
+`, userID, service.Label, service.Description, serviceID)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ UPDATE animals
 }
 
 func GetServicesCount() (int64, error) {
-	rows, err := mioDB.Query("SELECT count(*) FROM services")
+	rows, err := mioDB.Query("SELECT count(*) FROM serives")
 	if err != nil {
 		return 0, err
 	}

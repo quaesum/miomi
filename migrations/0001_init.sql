@@ -75,7 +75,6 @@ CREATE TABLE IF NOT EXISTS animals_photos (
     CONSTRAINT mi_animals_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
 CREATE TABLE IF NOT EXISTS news (
     id INT(11) unsigned PRIMARY KEY AUTO_INCREMENT,
     label varchar(256) DEFAULT NULL,
@@ -109,8 +108,29 @@ CREATE TABLE IF NOT EXISTS services_photos (
     CONSTRAINT mi_services_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- +goose Down
+CREATE TABLE IF NOT EXISTS products (
+    id INT(11) unsigned PRIMARY KEY AUTO_INCREMENT,
+    name varchar(256),
+    description TEXT,
+    link varchar(256),
+    created_at int(11) DEFAULT NULL,
+    deleted_at int(11) DEFAULT NULL,
+    updated_at int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS products_photos (
+    id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    productID INT(11) UNSIGNED,
+    photoID INT(11) UNSIGNED,
+    CONSTRAINT mi_products_photos_newsID FOREIGN KEY(productID) REFERENCES products(id) ON DELETE SET NULL,
+    CONSTRAINT mi_products_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- +goose Down
+DROP TABLE  IF EXISTS products;
+DROP TABLE IF EXISTS products_photos;
+DROP TABLE  IF EXISTS services;
+DROP TABLE IF EXISTS services_photos;
 DROP TABLE IF EXISTS news_photos;
 DROP TABLE IF EXISTS news;
 DROP TABLE IF EXISTS animals_photos;

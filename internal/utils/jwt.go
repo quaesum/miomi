@@ -13,9 +13,11 @@ import (
 )
 
 const (
-	UserRoleVolunteer = "volunteer"
-	userIDHeaderName  = "user_id"
-	bearerPrefix      = "bearer"
+	UserRoleVolunteer  = "volunteer"
+	UserRoleAdmin      = "admin"
+	userIDHeaderName   = "user_id"
+	userRoleHeaderName = "user_role"
+	bearerPrefix       = "bearer"
 )
 
 const JWTsecret = "eyzzzz*iOiTWak12121"
@@ -63,6 +65,11 @@ func GetMD5Hash(text string) string {
 func GetUserID(c *gin.Context) (int64, error) {
 	return fetchInt64JWTHeader(c, userIDHeaderName)
 }
+
+func GetUserRole(c *gin.Context) (string, error) {
+	return fetchStringJWTHeader(c, userRoleHeaderName)
+}
+
 func parseJWTToken(jwtKey, secret string, method jwt.SigningMethod) (jwt.MapClaims, error) {
 	if jwtKey == "" {
 		return nil, errors.New("jwt not valid")
@@ -114,6 +121,25 @@ func fetchInt64JWTHeader(c *gin.Context, headerName string) (int64, error) {
 		return 0, errors.New(fmt.Sprintf("unable to parse %s header", headerName))
 	}
 	return int64Value, nil
+}
+
+func fetchStringJWTHeader(c *gin.Context, headerName string) (string, error) {
+	headerValue := c.GetHeader("Authorization")
+	if headerValue == "" {
+		return "", errors.New(fmt.Sprintf("no %s found in request headers", headerName))
+	}
+
+	jwtConf := JWTConfig{Method: jwt.SigningMethodHS256, Secret: JWTsecret, ExtendTime: time.Hour * 48}
+	clames, err := ExtractJWTClaims(headerValue, jwtConf)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("unable to parse %s header", headerName))
+	}
+	var vv string
+	if _, ok := clames[headerName]; !ok {
+		return "", errors.New(fmt.Sprintf("no %s found in request headers", headerName))
+	}
+	vv = clames[headerName].(string)
+	return vv, nil
 }
 
 func ExtractJWTClaims(jwtToken string, conf JWTConfig) (jwt.MapClaims, error) {

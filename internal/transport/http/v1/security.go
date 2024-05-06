@@ -1,17 +1,28 @@
-package http
+package v1
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"madmax/internal/utils"
 	"net/http"
 )
 
 func AdminTokenCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("token")
-		if token == "" {
-			fmt.Println("AHTUNG!")
+		role, err := utils.GetUserRole(c)
+		if err != nil || role != utils.UserRoleAdmin {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
 		}
+		return
+	}
+}
+
+func UserTokenCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, err := utils.GetUserRole(c)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+		}
+		return
 	}
 }
 

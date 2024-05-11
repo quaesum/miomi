@@ -21,7 +21,6 @@ func UserCreate(ctx context.Context, userData *entity.UserCreateRequest) (string
 			Name:    userData.FirstName + " " + userData.LastName,
 			Address: userData.Address,
 			Phone:   userData.Phone,
-			Email:   userData.Email,
 		}
 		shID, err := mysql.CreateAnimalShelter(ctx, &sc)
 		if err != nil {
@@ -34,6 +33,7 @@ func UserCreate(ctx context.Context, userData *entity.UserCreateRequest) (string
 		LastName:  userData.LastName,
 		Password:  utils.GetMD5Hash(userData.Password),
 		Email:     userData.Email,
+		Phone:     userData.Phone,
 		Role:      utils.UserRoleVolunteer,
 	}
 	userID, err := mysql.CreateUser(ctx, &u)
@@ -93,4 +93,33 @@ func UserUpdate(ctx context.Context, userID int64, userData *entity.UserCreateRe
 
 func GetAllUsers(ctx context.Context) ([]entity.User, error) {
 	return mysql.GetAllUsers(ctx)
+}
+
+func VerifyUserEmail(ctx context.Context, userID int64) error {
+	userBI, err := UserByID(ctx, userID)
+	if err != nil {
+		return err // Error is formatted within fetchUserBasicInfo
+	}
+
+	emailVerificationToken, err := generateEmailVerificationToken(userID, userBI)
+	if err != nil {
+		return err
+	}
+
+	if err = mysql.UpdateEmailVerification(ctx, userID, emailVerificationToken); err != nil {
+		return err
+	}
+
+	return sendEmailVerificationMessage(userBI.Email, emailVerificationToken)
+}
+
+func VerifyEmail(ctx context.Context, token string) error {
+	rowsAffected, err := mysql.VerifyEmail(ctx, token)
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("invalid token")
+	}
+	return nil
 }

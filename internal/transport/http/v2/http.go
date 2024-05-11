@@ -5,6 +5,8 @@ import (
 )
 
 func HandlerHTTP(router *gin.Engine) {
+	animals := NewAnimalsHttp()
+
 	api := router.Group("/api")
 	//api.POST("/login", userLoginHandler)
 	//api.POST("/signup", userSignupHandler)
@@ -17,7 +19,7 @@ func HandlerHTTP(router *gin.Engine) {
 	animalGroup := api.Group("/animal/v2")
 	//animalGroup.Use(UserTokenCheck())
 	//animalGroup.GET("/:id", getAnimalByIDHandler)
-	animalGroup.POST("/", getAnimalsHandler)
+	animalGroup.POST("/", animals.GetAll)
 	//animalGroup.POST("/add", createAnimalHandler)
 	//animalGroup.POST("/update/:id", updateAnimalHandler)
 	//animalGroup.POST("/remove/:id", removeAnimalHandler)

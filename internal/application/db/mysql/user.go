@@ -14,9 +14,10 @@ INSERT INTO volunteers
 			lastName = ?,
 			password  = ?,
 			email  = ?,
+			phone = ?,
 			role  = ?,
 			createdAt = UNIX_TIMESTAMP()
-`, info.FirstName, info.LastName, info.Password, info.Email, info.Role)
+`, info.FirstName, info.LastName, info.Password, info.Email, info.Phone, info.Role)
 	if err != nil {
 		return 0, err
 	}
@@ -28,9 +29,10 @@ func UpdateUser(ctx context.Context, info *entity.User) error {
 UPDATE volunteers
    SET firstName = ?,
 	   lastName = ?,
-       email  = ?                
+       email  = ?,
+       phone = ?,
  WHERE id = ? 
-`, info.FirstName, info.LastName, info.Email, info.ID)
+`, info.FirstName, info.LastName, info.Email, info.Phone, info.ID)
 	if err != nil {
 		return err
 	}
@@ -39,17 +41,17 @@ UPDATE volunteers
 
 func GetUserByID(ctx context.Context, userID int64) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
-SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.role, ASH.id
+SELECT U.id, U.firstName, U.lastName, U.password, U.email, U.phone,  U.createdAt, U.role, ASH.id
   FROM volunteers AS U
   INNER JOIN animal_shelters as ASH
-  LEFT JOIN volunteers_on_shelters AS VOSH ON U.id = VOSH.volunteerID
+  RIGHT JOIN volunteers_on_shelters AS VOSH ON U.id = VOSH.volunteerID
   AND ASH.id = VOSH.shelterID
  WHERE U.id = ?`, userID)
 	info := new(entity.User)
 	var createdAt int64
 	err := row.Scan(
 		&info.ID, &info.FirstName, &info.LastName, &info.Password,
-		&info.Email, &createdAt, &info.Role, &info.ShelterID,
+		&info.Email, &info.Phone, &createdAt, &info.Role, &info.ShelterID,
 	)
 	info.CreatedAt = time.Unix(createdAt, 0).Format(time.RFC3339)
 	return info, err
@@ -57,14 +59,14 @@ SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.role,
 
 func GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	row := mioDB.QueryRowContext(ctx, `
-SELECT U.id, U.firstName, U.lastName, U.password, U.email,  U.createdAt, U.role
+SELECT U.id, U.firstName, U.lastName, U.password, U.email, U.phone,  U.createdAt, U.role
   FROM volunteers AS U
  WHERE U.email = ?`, email)
 	info := new(entity.User)
 	var createdAt int64
 	err := row.Scan(
 		&info.ID, &info.FirstName, &info.LastName, &info.Password,
-		&info.Email, &createdAt, &info.Role,
+		&info.Email, &info.Phone, &createdAt, &info.Role,
 	)
 	info.CreatedAt = time.Unix(createdAt, 0).Format(time.RFC3339)
 	if err != nil {
@@ -93,6 +95,7 @@ SELECT
   V.lastName, 
   V.role, 
   V.email, 
+  V.phone
 FROM 
   volunteers AS V 
 GROUP BY 
@@ -114,6 +117,7 @@ GROUP BY
 			&user.LastName,
 			&user.Role,
 			&user.Email,
+			&user.Phone,
 		)
 		if err != nil {
 			fmt.Println(err)
@@ -123,4 +127,26 @@ GROUP BY
 	}
 
 	return users, nil
+}
+
+func UpdateEmailVerification(ctx context.Context, userID int64, token string) error {
+	_, err := mioDB.ExecContext(ctx, `
+       UPDATE usersEmail
+		SET createdAt = UNIX_TIMESTAMP(),
+			verificationToken = ?
+        WHERE volunteerID = ?`,
+		token, userID)
+	return err
+}
+
+func VerifyEmail(ctx context.Context, token string) (int64, error) {
+	res, err := mioDB.ExecContext(ctx, `
+UPDATE usersEmail 
+SET isConfirmed = TRUE, 
+    verificationToken = NULL
+WHERE verificationToken = ?)`, token)
+	if err != nil {
+		return 0, err
+	}
+	return res.RowsAffected()
 }

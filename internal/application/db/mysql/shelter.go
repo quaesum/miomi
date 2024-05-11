@@ -79,3 +79,31 @@ DELETE FROM animals_on_shelters
 `, animalID)
 	return err
 }
+
+func UpdateShelter(ctx context.Context, shID int64, shelter *entity.ShelterCreateRequest) error {
+	_, err := mioDB.ExecContext(ctx, `
+UPDATE animal_shelters
+   SET shelter_name = ?,
+	description = ?,
+	logo = ?,
+	phone = ?,
+	adress = ?
+ WHERE id = ? 
+`, shelter.Name, shelter.Description, shelter.Logo, shelter.Phone, shelter.Address, shID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RemoveShelterByID(ctx context.Context, shID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+DELETE FROM animal_shelters
+WHERE id = ?
+
+`, shID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

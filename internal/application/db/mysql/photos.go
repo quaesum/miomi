@@ -80,7 +80,7 @@ func GetPhotosByServiceID(ctx context.Context, serviceID int64) ([]string, error
 	rows, err := mioDB.QueryContext(ctx, `
 SELECT P.filename 
  FROM photos AS P 
-  INNER JOIN service_photos AS PH ON PH.serviceID = ?
+  INNER JOIN services_photos AS PH ON PH.serviceID = ?
   AND P.id = PH.photoID`, serviceID)
 	if err != nil {
 		return nil, err
@@ -102,23 +102,22 @@ SELECT P.filename
 
 func GetPhotosByProductID(ctx context.Context, productID int64) ([]string, error) {
 	rows, err := mioDB.QueryContext(ctx, `
-SELECT P.filename 
- FROM photos AS P 
-  INNER JOIN products_photos AS PH ON PH.productID = ?
-  AND P.id = PH.photoID`, productID)
+SELECT P.photoLink 
+ FROM products_photos AS P 
+  WHERE P.productID = ?`, productID)
 	if err != nil {
 		return nil, err
 	}
 	var files []string
 	for rows.Next() {
-		var fileName string
-		err := rows.Scan(
-			&fileName,
+		var photoLink string
+		err = rows.Scan(
+			&photoLink,
 		)
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, fileName)
+		files = append(files, photoLink)
 	}
 
 	return files, err
@@ -135,25 +134,25 @@ VALUES(?, ?);
 
 func AddServicePhotos(ctx context.Context, serviceID, photoID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
-INSERT INTO service_photos
+INSERT INTO services_photos
 (serviceID, photoID)
 VALUES(?, ?);
 `, serviceID, photoID)
 	return err
 }
 
-func AddProductPhotos(ctx context.Context, productID, photoID int64) error {
+func AddProductPhotos(ctx context.Context, productID int64, photoLink string) error {
 	_, err := mioDB.ExecContext(ctx, `
 INSERT INTO products_photos
-(productID, photoID)
+(productID, photoLink)
 VALUES(?, ?);
-`, productID, photoID)
+`, productID, photoLink)
 	return err
 }
 
 func RemoveServicePhotos(ctx context.Context, serviceID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
-DELETE FROM service_photos
+DELETE FROM services_photos
 		WHERE  serviceID = ?
 `, serviceID)
 	return err

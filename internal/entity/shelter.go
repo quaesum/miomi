@@ -1,19 +1,17 @@
 package entity
 
 type Shelter struct {
-	ID          int64
-	Name        string
-	Description string
-	Logo        string
-	Address     string
-	Phone       string
-	Email       string `json:"email"`
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Logo        string `json:"logo"`
+	Address     string `json:"address"`
+	Phone       string `json:"phone"`
 }
 type ShelterCreateRequest struct {
-	Name        string
-	Description string
-	Logo        string
-	Address     string
-	Phone       string
-	Email       string `json:"email"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Logo        string `json:"logo"`
+	Address     string `json:"address"`
+	Phone       string `json:"phone"`
 }

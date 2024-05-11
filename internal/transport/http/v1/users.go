@@ -22,15 +22,6 @@ func getUserByIDHandler(c *gin.Context) {
 	tctx, _ := context.WithTimeout(ctx, time.Minute*2)
 	user, err := application.UserByID(tctx, userID)
 	if err != nil {
-		id := c.Param("id")
-		uID, err := strconv.ParseInt(id, 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ctx := context.Background()
-		tctx, _ := context.WithTimeout(ctx, time.Minute*2)
-		application.UserByID(tctx, uID)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -110,7 +101,7 @@ func getUserInfoHandler(c *gin.Context) {
 		return
 	}
 	ctx := context.Background()
-	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	tctx, _ := context.WithTimeout(ctx, time.Minute*5)
 
 	user, err := application.UserByID(tctx, userID)
 	if err != nil {
@@ -119,4 +110,31 @@ func getUserInfoHandler(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"data": user})
 	return
+}
+
+func verifyEmailSendHandler(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = application.VerifyUserEmail(context.Background(), userID)
+	if err != nil {
+		c.Error(err)
+	}
+	c.JSON(200, gin.H{
+		"data": "ok",
+	})
+}
+
+func verifyEmailHandler(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		c.Redirect(http.StatusFound, "https://app.dealingi.by/email-confirm-restricted/")
+	}
+	err := application.VerifyEmail(context.Background(), token)
+	if err != nil {
+		c.Redirect(http.StatusFound, "https://app.dealingi.by/email-confirm-restricted/")
+	}
+	c.Redirect(http.StatusFound, "https://app.dealingi.by/email-confirm-success")
 }

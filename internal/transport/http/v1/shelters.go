@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"madmax/internal/application"
+	"madmax/internal/entity"
 	"net/http"
 	"strconv"
 	"time"
@@ -38,8 +39,50 @@ func getAllSheltersHandler(c *gin.Context) {
 	return
 }
 func createShelterHandler(c *gin.Context) {
-	c.JSON(200, gin.H{})
+	var scr entity.ShelterCreateRequest
+	if err := c.ShouldBindJSON(&scr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	shID, err := application.ShelterCreate(tctx, &scr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	c.JSON(200, gin.H{"id": shID})
 }
 func updateShelterHandler(c *gin.Context) {
+	id := c.Param("id")
+	shID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	var scr entity.ShelterCreateRequest
+	if err := c.ShouldBindJSON(&scr); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+
+	err = application.ShelterUpdate(tctx, shID, &scr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	c.JSON(200, gin.H{})
+}
+
+func removeShelterHandler(c *gin.Context) {
+	id := c.Param("id")
+	shID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+
+	err = application.RemoveNewsById(tctx, shID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 	c.JSON(200, gin.H{})
 }

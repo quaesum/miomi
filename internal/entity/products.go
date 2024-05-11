@@ -4,7 +4,7 @@ type Product struct {
 	ID          int64    `json:"id"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
-	Photos      []string `json:"images"`
+	Photos      []string `json:"photos"`
 	Link        string   `json:"link"`
 	CreatedAt   string   `json:"created_at"`
 	UpdatedAt   string   `json:"updated_at"`
@@ -13,24 +13,24 @@ type Product struct {
 }
 
 type ProductSearch struct {
-	ID          string   `json:"id"`
+	ID          int64    `json:"id"`
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
-	Photos      []string `json:"images"`
+	Photos      []string `json:"photos"`
 	Link        string   `json:"link"`
 }
 
 type ProductCreateRequest struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Photos      []int64 `json:"images"`
-	Link        string  `json:"link"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Photos      []string `json:"photos"`
+	Link        string   `json:"link"`
 }
 
 type ProductCreateBleve struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
-	Photos      []string `json:"images"`
+	Photos      []string `json:"photos"`
 	Link        string   `json:"link"`
 }
 

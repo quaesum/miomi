@@ -5,12 +5,23 @@ import (
 	"github.com/gin-gonic/gin"
 	"madmax/internal/application"
 	"madmax/internal/entity"
+	"madmax/internal/utils"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func createProductHandler(c *gin.Context) {
+type ProductsHttp struct {
+	app *application.ProductApplication
+}
+
+func NewProductsHttp() *ProductsHttp {
+	return &ProductsHttp{
+		app: application.NewProductApplication(),
+	}
+}
+
+func (p *ProductsHttp) Create(c *gin.Context) {
 	var pcr entity.ProductCreateRequest
 	if err := c.ShouldBindJSON(&pcr); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -18,7 +29,7 @@ func createProductHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Minute)
-	productID, err := application.ProductCreate(tctx, &pcr)
+	productID, err := p.app.Create(tctx, &pcr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -28,7 +39,7 @@ func createProductHandler(c *gin.Context) {
 	return
 }
 
-func getProductByIDHandler(c *gin.Context) {
+func (p *ProductsHttp) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	productID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -37,7 +48,7 @@ func getProductByIDHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	product, err := application.ProductByID(tctx, productID)
+	product, err := p.app.GetByID(tctx, productID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -46,7 +57,7 @@ func getProductByIDHandler(c *gin.Context) {
 	return
 }
 
-func getProductsHandler(c *gin.Context) {
+func (p *ProductsHttp) GetAll(c *gin.Context) {
 	var req entity.SearchRequest
 	var err error
 	c.ShouldBindJSON(&req)
@@ -54,38 +65,44 @@ func getProductsHandler(c *gin.Context) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
+	if req.PerPage <= 0 {
+		req.PerPage = 21
+	}
+	var products []entity.ProductSearch
+	if req.Request == "" {
+		products, err = p.app.GetAllFromBleve()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"search": err.Error()})
+			return
+		}
+	} else {
+		products, err = p.app.GetFromBleve(req.Request)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"search": err.Error()})
+			return
+		}
+	}
 
-	products, err := application.GetProductsFromBleve(req.Request)
-	//if req.Request != "" {
-	//	products, err = application.GetProductsSearchResult(req.Request, products)
-	//}
-
+	maxPages, err := utils.GetMaxPages(len(products), req.PerPage)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"pages": err.Error()})
 		return
 	}
 
-	//maxPages, err := application.GetMaxPages(len(products), req.PerPage)
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
-
-	//left, right, err := application.GetRecordsOnCurrentPage(req, len(products))
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	//	return
-	//}
-
-	//resp := entity.SearchProductsResponse{
-	//	Products: products[left:right],
-	//	MaxPage:  maxPages,
-	//}
-	c.JSON(200, products)
+	left, right, err := utils.GetRecordsOnCurrentPage(req, len(products))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"pages": err.Error()})
+		return
+	}
+	resp := entity.SearchProductsResponse{
+		Products: products[left:right],
+		MaxPage:  maxPages,
+	}
+	c.JSON(200, resp)
 	return
 }
 
-func updateProductHandler(c *gin.Context) {
+func (p *ProductsHttp) Update(c *gin.Context) {
 	id := c.Param("id")
 	serviceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -99,7 +116,7 @@ func updateProductHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	err = application.ProductUpdate(tctx, serviceID, &pcr)
+	err = p.app.Update(tctx, serviceID, &pcr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -109,7 +126,7 @@ func updateProductHandler(c *gin.Context) {
 	return
 }
 
-func removeProductHandler(c *gin.Context) {
+func (p *ProductsHttp) Remove(c *gin.Context) {
 	id := c.Param("id")
 	serviceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -118,7 +135,7 @@ func removeProductHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	err = application.RemoveProductByID(tctx, serviceID)
+	err = p.app.Remove(tctx, serviceID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

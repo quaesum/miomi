@@ -5,22 +5,30 @@ import (
 )
 
 func HandlerHTTP(router *gin.Engine) {
+
+	products := NewProductsHttp()
+	animals := NewAnimalsHttp()
+	services := NewServicesHttp()
+
 	api := router.Group("/api")
 	api.POST("/login", userLoginHandler)
 	api.POST("/signup", userSignupHandler)
 
 	userGroup := api.Group("/user/v1")
-	userGroup.Use(UserTokenCheck())
+	//userGroup.Use(UserTokenCheck())
 	userGroup.GET("/info", getUserInfoHandler)
 	userGroup.POST("/update", updateUserHandler)
+	userGroup.GET("/info/:id", getUserByIDHandler)
+	userGroup.POST("/verify_email", verifyEmailSendHandler)
+	userGroup.GET("/verify_email", verifyEmailHandler)
 
 	animalGroup := api.Group("/animal/v1")
 	//animalGroup.Use(UserTokenCheck())
-	animalGroup.GET("/:id", getAnimalByIDHandler)
-	animalGroup.POST("/", getAnimalsHandler)
-	animalGroup.POST("/add", createAnimalHandler)
-	animalGroup.POST("/update/:id", updateAnimalHandler)
-	animalGroup.POST("/remove/:id", removeAnimalHandler)
+	animalGroup.GET("/:id", animals.GetByID)
+	animalGroup.POST("/", animals.GetAll)
+	animalGroup.POST("/add", animals.Create)
+	animalGroup.POST("/update/:id", animals.Update)
+	animalGroup.POST("/remove/:id", animals.Remove)
 
 	shelterGroup := api.Group("/shelter/v1")
 	shelterGroup.Use(UserTokenCheck())
@@ -28,6 +36,7 @@ func HandlerHTTP(router *gin.Engine) {
 	shelterGroup.GET("/all", getAllSheltersHandler)
 	shelterGroup.POST("/add", createShelterHandler)
 	shelterGroup.POST("/update/:id", updateShelterHandler)
+	shelterGroup.POST("/remove/:id", removeShelterHandler)
 
 	adminGroup := api.Group("/admin/v1")
 	adminGroup.Use(AdminTokenCheck())
@@ -51,19 +60,27 @@ func HandlerHTTP(router *gin.Engine) {
 	fileGroup.POST("/addProduct", attachProductFileHandler)
 	fileGroup.GET("/getUrl", getAllFileNamesAndIdsHandler)
 
-	serviceGroup := api.Group("/service/v1")
-	serviceGroup.Use(UserTokenCheck())
-	serviceGroup.GET("/:id", getServiceByIDHandler)
-	serviceGroup.GET("/", getServicesHandler)
-	serviceGroup.POST("/add", createServiceHandler)
-	serviceGroup.POST("/update/:id", updateServiceHandler)
-	serviceGroup.POST("/remove/:id", removeServiceHandler)
+	serviceGroup := api.Group("/services/v1")
+	//serviceGroup.Use(UserTokenCheck())
+	serviceGroup.GET("/:id", services.GetByID)
+	serviceGroup.POST("/", services.GetAll)
+	serviceGroup.POST("/add", services.Create)
+	serviceGroup.POST("/update/:id", services.Update)
+	serviceGroup.POST("/remove/:id", services.Remove)
 
 	productsGroup := api.Group("/products/v1")
-	productsGroup.Use(UserTokenCheck())
-	productsGroup.GET("/:id", getProductByIDHandler)
-	productsGroup.GET("/", getProductsHandler)
-	productsGroup.POST("/add", createProductHandler)
-	productsGroup.POST("/update/:id", updateProductHandler)
-	productsGroup.POST("/remove/:id", removeProductHandler)
+	//productsGroup.Use(UserTokenCheck())
+	productsGroup.GET("/:id", products.GetByID)
+	productsGroup.POST("/", products.GetAll)
+	productsGroup.POST("/add", products.Create)
+	productsGroup.POST("/update/:id", products.Update)
+	productsGroup.POST("/remove/:id", products.Remove)
+}
+
+type Controller interface {
+	Create(c *gin.Context)
+	GetByID(c *gin.Context)
+	GetAll(c *gin.Context)
+	Update(c *gin.Context)
+	Remove(c *gin.Context)
 }

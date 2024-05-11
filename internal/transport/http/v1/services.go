@@ -11,7 +11,17 @@ import (
 	"time"
 )
 
-func createServiceHandler(c *gin.Context) {
+type ServiceHttp struct {
+	app *application.ServiceApplication
+}
+
+func NewServicesHttp() *ServiceHttp {
+	return &ServiceHttp{
+		app: application.NewServiceApplication(),
+	}
+}
+
+func (s *ServiceHttp) Create(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -23,8 +33,8 @@ func createServiceHandler(c *gin.Context) {
 		return
 	}
 	ctx := context.Background()
-	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	serviceID, err := application.ServiceCreate(tctx, userID, &csr)
+	tctx, _ := context.WithTimeout(ctx, time.Minute*5)
+	serviceID, err := s.app.Create(tctx, userID, &csr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -34,7 +44,7 @@ func createServiceHandler(c *gin.Context) {
 	return
 }
 
-func getServiceByIDHandler(c *gin.Context) {
+func (s *ServiceHttp) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	serviceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -43,7 +53,7 @@ func getServiceByIDHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	service, err := application.ServiceByID(tctx, serviceID)
+	service, err := s.app.GetByID(tctx, serviceID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -52,7 +62,7 @@ func getServiceByIDHandler(c *gin.Context) {
 	return
 }
 
-func getServicesHandler(c *gin.Context) {
+func (s *ServiceHttp) GetAll(c *gin.Context) {
 	var req entity.SearchRequest
 	var err error
 	c.ShouldBindJSON(&req)
@@ -60,27 +70,26 @@ func getServicesHandler(c *gin.Context) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
+	var services []entity.ServiceBleve
+	if req.Request == "" {
+		services, err = s.app.GetAllFromBleve()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+	} else {
+		services, err = s.app.GetFromBleve(req.Request)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+	}
 
-	ctx := context.Background()
-	tctx, _ := context.WithTimeout(ctx, time.Second*15)
-
-	services, err := application.GetAllServices(tctx)
-	//if req.Request != "" {
-	//	services, err = application.GetServicesSearchResult(req.Request, services)
-	//}
-
+	maxPages, err := utils.GetMaxPages(len(services), req.PerPage)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	maxPages, err := application.GetMaxPages(len(services), req.PerPage)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	left, right, err := application.GetRecordsOnCurrentPage(req, len(services))
+	left, right, err := utils.GetRecordsOnCurrentPage(req, len(services))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -94,7 +103,7 @@ func getServicesHandler(c *gin.Context) {
 	return
 }
 
-func updateServiceHandler(c *gin.Context) {
+func (s *ServiceHttp) Update(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -113,7 +122,7 @@ func updateServiceHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	err = application.ServiceUpdate(tctx, userID, serviceID, &csr)
+	err = s.app.Update(tctx, userID, serviceID, &csr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -123,7 +132,7 @@ func updateServiceHandler(c *gin.Context) {
 	return
 }
 
-func removeServiceHandler(c *gin.Context) {
+func (s *ServiceHttp) Remove(c *gin.Context) {
 	id := c.Param("id")
 	serviceID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
@@ -132,7 +141,7 @@ func removeServiceHandler(c *gin.Context) {
 	}
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
-	err = application.RemoveServiceByID(tctx, serviceID)
+	err = s.app.Remove(tctx, serviceID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

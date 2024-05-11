@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package mail;
+
+// Mail declares service that is capable of sending emails
+service Mail {
+    // Send simply sends email based on SendRequest
+    rpc Send (SendRequest) returns (Empty);
+}
+
+// SendRequest is used to send emails
+message SendRequest {
+    string subject = 1;
+    string emailTO = 2;
+    string emailCC = 3;
+    string from = 4;
+    string template = 5;
+    map<string, string> attributes = 6;
+}
+
+// Empty is empty
+message Empty {
+}

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS volunteers(
     password varchar(255) DEFAULT NULL,
     role varchar(35) DEFAULT NULL,
     email  VARCHAR(256)  DEFAULT '',
+    phone varchar(45) DEFAULT NULL,
     deactevated bool DEFAULT FALSE,
     createdAt int(11) DEFAULT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -93,7 +94,7 @@ CREATE TABLE IF NOT EXISTS news_photos (
 CREATE TABLE IF NOT EXISTS services (
     id INT(11) unsigned PRIMARY KEY AUTO_INCREMENT,
     volunteer_id INT(11) unsigned,
-    label varchar(256) DEFAULT NULL,
+    name varchar(256) DEFAULT NULL,
     description TEXT DEFAULT NULL,
     created_at int(11) DEFAULT NULL,
     deleted_at int(11) DEFAULT NULL,
@@ -121,12 +122,35 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS products_photos (
     id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     productID INT(11) UNSIGNED,
-    photoID INT(11) UNSIGNED,
-    CONSTRAINT mi_products_photos_newsID FOREIGN KEY(productID) REFERENCES products(id) ON DELETE SET NULL,
-    CONSTRAINT mi_products_photos_photoID FOREIGN KEY(photoID) REFERENCES photos(id) ON DELETE SET NULL
+    photoLink varchar(256),
+    CONSTRAINT mi_products_photos_productID FOREIGN KEY(productID) REFERENCES products(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `passwordRecovery` (
+    id int(11) unsigned NOT NULL AUTO_INCREMENT,
+    `token` varchar(40) DEFAULT NULL,
+    `volunteerID` int(11) unsigned DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `volunteerID` (`volunteerID`),
+    CONSTRAINT `passwordrecovery_ibfk_1` FOREIGN KEY (`volunteerID`) REFERENCES `volunteers` (`id`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `usersEmail` (
+    `email` varchar(255) NOT NULL,
+    `volunteerID` int(11) unsigned DEFAULT NULL,
+    `isConfirmed` tinyint(1) DEFAULT NULL,
+    `createdAt` int(11) DEFAULT NULL,
+    `verificationToken` varchar(600) DEFAULT NULL,
+    PRIMARY KEY (`email`),
+    KEY `volunteerID` (`volunteerID`),
+    CONSTRAINT `usersEmail_ibfk_1` FOREIGN KEY (`volunteerID`) REFERENCES `volunteers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 -- +goose Down
+DROP TABLE IF EXISTS passwordRecovery;
+DROP TABLE IF EXISTS usersEmail;
 DROP TABLE  IF EXISTS products;
 DROP TABLE IF EXISTS products_photos;
 DROP TABLE  IF EXISTS services;

@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"github.com/blevesearch/bleve"
 	"github.com/gin-gonic/gin"
+	rabbitmq2 "github.com/wagslane/go-rabbitmq"
 	"log"
 	bleve2 "madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
+	"madmax/internal/application/db/rabbitmq"
 	"madmax/internal/transport/http/v1"
 	v2 "madmax/internal/transport/http/v2"
+	"madmax/internal/utils"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +28,7 @@ type App struct {
 	BleveProducts bleve.Index
 	BleveAnimals  bleve.Index
 	BleveServices bleve.Index
+	publisher     *rabbitmq2.Publisher
 }
 
 var application *App
@@ -49,22 +53,30 @@ func NewApp() (*App, error) {
 
 	app.SQLDB, err = mysql.NewDB(app.Config.MysqlDSN)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize  mysql client: %w", err)
+		return nil, fmt.Errorf("failed to initialize mysql client: %w", err)
 	}
 
 	err = bleve2.NewBleve()
-	//app.BleveProducts, err = bleve2.NewBleveProducts()
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize  bleve products: %w", err)
+		return nil, fmt.Errorf("failed to initialize bleve: %w", err)
 	}
-	//app.BleveAnimals, err = bleve2.NewBleveAnimals()
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to initialize  bleve animals: %w", err)
-	//}
-	//app.BleveServices, err = bleve2.NewBleveServices()
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to initialize  bleve serives: %w", err)
-	//}
+
+	go utils.RabbitConnect()
+
+	publisher, err := rabbitmq.SetupRabbitMQ()
+	if err != nil {
+		log.Fatalf("Error setting up RabbitMQ: %v", err)
+	}
+	defer func() {
+		publisher.Close()
+	}()
+
+	app.publisher = publisher
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize rabbitmq client: %w", err)
+	}
+
 	return app, err
 }
 
@@ -89,7 +101,6 @@ func (app *App) Run() error {
 // Start runs App and doesn't wait
 func (app *App) Start() <-chan error {
 	var errc = make(chan error, 1)
-
 	router := gin.Default()
 	router.Use(v1.GinMiddleware("http://localhost:3000"))
 	v1.HandlerHTTP(router)

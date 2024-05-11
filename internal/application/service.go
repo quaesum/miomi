@@ -5,13 +5,24 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/samber/lo"
+	"madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
 	"madmax/internal/entity"
-	"sort"
+	"madmax/internal/utils"
+	"strconv"
 )
 
-func ServiceCreate(ctx context.Context, userID int64, service *entity.ServiceCreateRequest) (int64, error) {
+type ServiceApplication struct {
+	bleve *bleve.ServiceBleve
+}
+
+func NewServiceApplication() *ServiceApplication {
+	return &ServiceApplication{
+		bleve: bleve.NewSerivceBleve(),
+	}
+}
+
+func (s *ServiceApplication) Create(ctx context.Context, userID int64, service *entity.ServiceCreateRequest) (int64, error) {
 	serviceID, err := mysql.CreateService(ctx, userID, service)
 	if err != nil {
 		return 0, err
@@ -23,32 +34,45 @@ func ServiceCreate(ctx context.Context, userID int64, service *entity.ServiceCre
 			return 0, err
 		}
 	}
+
+	serviceInfo, err := s.GetByID(ctx, serviceID)
+	if err != nil {
+		return 0, err
+	}
+
+	productBleve := entity.InsertServiceReqToCreate(*serviceInfo)
+	err = s.bleve.Add(strconv.Itoa(int(serviceID)), productBleve)
+	if err != nil {
+		return 0, err
+	}
+
 	return serviceID, nil
 }
 
-func ServiceByID(ctx context.Context, id int64) (*entity.Service, error) {
+func (s *ServiceApplication) GetByID(ctx context.Context, id int64) (*entity.Service, error) {
 	service, err := mysql.GetServiceInfo(ctx, id)
-	if err != nil && err == sql.ErrNoRows {
+	if err != nil {
 		fmt.Println(err)
 		return nil, errors.New("service not exist")
 	}
-	photos, err := mysql.GetPhotosByServiceID(ctx, id)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
-	}
-	service.Photos = photos
 	return service, nil
 }
 
-func RemoveServiceByID(ctx context.Context, id int64) error {
+func (s *ServiceApplication) Remove(ctx context.Context, id int64) error {
 	err := mysql.RemoveServiceByID(ctx, id)
-	if err != nil && err != sql.ErrNoRows {
+
+	if err != nil {
+		return err
+	}
+
+	err = s.bleve.Remove(strconv.Itoa(int(id)))
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ServiceUpdate(ctx context.Context, userID, serviceID int64, serviceData *entity.ServiceCreateRequest) error {
+func (s *ServiceApplication) Update(ctx context.Context, userID, serviceID int64, serviceData *entity.ServiceCreateRequest) error {
 	_, err := mysql.GetUserByID(ctx, userID)
 	if err != nil && err != sql.ErrNoRows {
 		return errors.New("user exist")
@@ -68,31 +92,70 @@ func ServiceUpdate(ctx context.Context, userID, serviceID int64, serviceData *en
 			return err
 		}
 	}
+	serviceInfo, err := s.GetByID(ctx, serviceID)
+	if err != nil {
+		return err
+	}
+
+	productBleve := entity.InsertServiceReqToCreate(*serviceInfo)
+	err = s.bleve.Add(strconv.Itoa(int(serviceID)), productBleve)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func GetAllServices(ctx context.Context) ([]entity.Service, error) {
-	services, err := mysql.GetAllServices(ctx)
+func (s *ServiceApplication) GetFromBleve(searchQuery string) ([]entity.ServiceBleve, error) {
+	res, err := s.bleve.Search(searchQuery)
 	if err != nil {
 		return nil, err
+	}
+	var services []entity.ServiceBleve
+	for _, item := range res.Hits {
+		result := item.Fields
+		id, err := strconv.ParseInt(item.ID, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		service := entity.ServiceBleve{
+			ID:          id,
+			VolunteerID: result["volunteer_id"].(float64),
+			Name:        result["name"].(string),
+			Description: result["description"].(string),
+		}
+		service.Photos, err = utils.ProcessPhotos(result["photos"])
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, service)
 	}
 	return services, err
 }
 
-func GetServicesSearchResult(searchTerm string, services []entity.Service) ([]entity.Service, error) {
-	searchTerm = cleanQuery(searchTerm)
-
-	for i := range services {
-		services[i].Score = calculateServicesScore(services[i], searchTerm)
+func (s *ServiceApplication) GetAllFromBleve() ([]entity.ServiceBleve, error) {
+	res, err := s.bleve.SearchWOQuery()
+	if err != nil {
+		return nil, err
 	}
-
-	sort.Slice(services, func(i, j int) bool {
-		return services[i].Score > services[j].Score
-	})
-
-	services = lo.Filter(services, func(service entity.Service, _ int) bool {
-		return service.Score > 0
-	})
-
-	return services, nil
+	var services []entity.ServiceBleve
+	for _, item := range res.Hits {
+		result := item.Fields
+		id, err := strconv.ParseInt(item.ID, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		service := entity.ServiceBleve{
+			ID:          id,
+			VolunteerID: result["volunteer_id"].(float64),
+			Name:        result["name"].(string),
+			Description: result["description"].(string),
+		}
+		service.Photos, err = utils.ProcessPhotos(result["photos"])
+		if err != nil {
+			return nil, err
+		}
+		services = append(services, service)
+	}
+	return services, err
 }

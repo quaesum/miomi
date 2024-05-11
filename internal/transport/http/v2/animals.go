@@ -4,10 +4,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"madmax/internal/application"
 	"madmax/internal/entity"
+	"madmax/internal/utils"
 	"net/http"
 )
 
-func getAnimalsHandler(c *gin.Context) {
+type AnimalsHttp struct {
+	app *application.AnimalApplication
+}
+
+func NewAnimalsHttp() *AnimalsHttp {
+	return &AnimalsHttp{
+		app: application.NewAnimalApplication(),
+	}
+}
+
+func (a *AnimalsHttp) GetAll(c *gin.Context) {
 	var req entity.SearchRequest
 	var err error
 	c.ShouldBindJSON(&req)
@@ -15,26 +26,26 @@ func getAnimalsHandler(c *gin.Context) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
-	var animals []entity.AnimalsBleve
+	var animals []entity.AnimalBleve
 	if req.Request == "" {
-		animals, err = application.GetAllAnimalsFromBleve()
+		animals, err = a.app.GetAllFromBleve()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 	} else {
-		animals, err = application.GetAnimalsFromBleve(req.Request)
+		animals, err = a.app.GetFromBleve(req.Request)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 	}
 
-	maxPages, err := application.GetMaxPages(len(animals), req.PerPage)
+	maxPages, err := utils.GetMaxPages(len(animals), req.PerPage)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	left, right, err := application.GetRecordsOnCurrentPage(req, len(animals))
+	left, right, err := utils.GetRecordsOnCurrentPage(req, len(animals))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

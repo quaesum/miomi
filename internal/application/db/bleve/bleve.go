@@ -2,7 +2,6 @@ package bleve
 
 import (
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/lang/ru"
 	"github.com/blevesearch/bleve/mapping"
 )
 
@@ -24,7 +23,11 @@ func NewBleve() error {
 		return err
 	}
 	bleveDBAnimals = indexAnimals
-	bleveDBServices = indexProducts
+	indexServices, err := NewBleveServices()
+	if err != nil {
+		return err
+	}
+	bleveDBServices = indexServices
 
 	return nil
 }
@@ -36,7 +39,6 @@ func NewBleveProducts() (bleve.Index, error) {
 	if err != nil {
 		return nil, err
 	}
-	bleveDBProducts = index
 	return index, nil
 }
 
@@ -47,38 +49,18 @@ func NewBleveAnimals() (bleve.Index, error) {
 	if err != nil {
 		return nil, err
 	}
-	bleveDBAnimals = index
 	return index, nil
 }
 
-//func NewBleveServices() (bleve.Index, error) {
-//	indexName := "belve.services"
-//	index, err := buildIndex(indexName)
-//	if err != nil {
-//		return nil, err
-//	}
-//	bleveDBServices = index
-//	return index, nil
-//}
-
-//func buildIndex(indexName string, impl *mapping.IndexMappingImpl) (bleve.Index, error) {
-//	index, err := bleve.Open(indexName)
-//	if err == bleve.ErrorIndexPathDoesNotExist {
-//		kvStore := goleveldb.Name
-//		kvConfig := map[string]interface{}{
-//			"create_if_missing": true,
-//			//		"write_buffer_size":         536870912,
-//			//		"lru_cache_capacity":        536870912,
-//			//		"bloom_filter_bits_per_key": 10,
-//		}
-//
-//		index, err = bleve.NewUsing(indexName, impl, "upside_down", kvStore, kvConfig)
-//	}
-//	if err != nil {
-//		return nil, err
-//	}
-//	return index, nil
-//}
+func NewBleveServices() (bleve.Index, error) {
+	indexName := "bleve.services"
+	impl := buildServicesMapping()
+	index, err := buildIndex(indexName, impl)
+	if err != nil {
+		return nil, err
+	}
+	return index, nil
+}
 
 func buildAnimalsMapping() *mapping.IndexMappingImpl {
 	textFieldMapping := newTextFieldMapping()
@@ -120,20 +102,18 @@ func buildProductsMapping() *mapping.IndexMappingImpl {
 }
 
 func buildServicesMapping() *mapping.IndexMappingImpl {
-	return nil
-}
+	textFieldMapping := newTextFieldMapping()
+	numericFieldMapping := newNumericFieldMapping()
 
-func buildMapping() *mapping.IndexMappingImpl {
-	ruFieldMapping := bleve.NewTextFieldMapping()
-	ruFieldMapping.Analyzer = ru.AnalyzerName
+	serviceMapping := bleve.NewDocumentMapping()
 
-	eventMapping := bleve.NewDocumentMapping()
-	eventMapping.AddFieldMappingsAt("name", ruFieldMapping)
+	serviceMapping.AddFieldMappingsAt("volunteer_id", numericFieldMapping)
+	serviceMapping.AddFieldMappingsAt("name", textFieldMapping)
+	serviceMapping.AddFieldMappingsAt("description", textFieldMapping)
+	serviceMapping.AddFieldMappingsAt("photos", textFieldMapping)
 
-	mapping := bleve.NewIndexMapping()
-	mapping.DefaultMapping = eventMapping
-	mapping.DefaultAnalyzer = ru.AnalyzerName
-	return mapping
+	indexMapping := bleve.NewIndexMapping()
+	return indexMapping
 }
 
 func buildIndex(indexName string, impl *mapping.IndexMappingImpl) (bleve.Index, error) {

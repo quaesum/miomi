@@ -9,30 +9,41 @@ import (
 	"madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
 	"madmax/internal/entity"
+	"madmax/internal/utils"
 	"sort"
 	"strconv"
 )
 
-func ProductCreate(ctx context.Context, product *entity.ProductCreateRequest) (int64, error) {
+type ProductApplication struct {
+	bleve *bleve.ProductBleve
+}
+
+func NewProductApplication() *ProductApplication {
+	return &ProductApplication{
+		bleve: bleve.NewProductBleve(),
+	}
+}
+
+func (p *ProductApplication) Create(ctx context.Context, product *entity.ProductCreateRequest) (int64, error) {
 	productID, err := mysql.CreateProduct(ctx, product)
 	if err != nil {
 		return 0, err
 	}
 
-	for _, photoID := range product.Photos {
-		err = mysql.AddProductPhotos(ctx, productID, photoID)
+	for _, photoLink := range product.Photos {
+		err = mysql.AddProductPhotos(ctx, productID, photoLink)
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	productInfo, err := ProductByID(ctx, productID)
+	productInfo, err := p.GetByID(ctx, productID)
 	if err != nil {
 		return 0, err
 	}
 
 	productBleve := entity.InsertProductReqToCreate(*productInfo)
-	err = bleve.AddProduct(strconv.Itoa(int(productID)), productBleve)
+	err = p.bleve.Add(strconv.Itoa(int(productID)), productBleve)
 	if err != nil {
 		return 0, err
 	}
@@ -40,7 +51,7 @@ func ProductCreate(ctx context.Context, product *entity.ProductCreateRequest) (i
 	return productID, nil
 }
 
-func ProductByID(ctx context.Context, id int64) (*entity.Product, error) {
+func (p *ProductApplication) GetByID(ctx context.Context, id int64) (*entity.Product, error) {
 	service, err := mysql.GetProductInfo(ctx, id)
 	if err != nil && err == sql.ErrNoRows {
 		fmt.Println(err)
@@ -54,19 +65,19 @@ func ProductByID(ctx context.Context, id int64) (*entity.Product, error) {
 	return service, nil
 }
 
-func RemoveProductByID(ctx context.Context, id int64) error {
+func (p *ProductApplication) Remove(ctx context.Context, id int64) error {
 	err := mysql.RemoveProductByID(ctx, id)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
-	err = bleve.DeleteProduct(strconv.Itoa(int(id)))
+	err = p.bleve.Remove(strconv.Itoa(int(id)))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ProductUpdate(ctx context.Context, productID int64, productData *entity.ProductCreateRequest) error {
+func (p *ProductApplication) Update(ctx context.Context, productID int64, productData *entity.ProductCreateRequest) error {
 	err := mysql.UpdateProduct(ctx, productID, productData)
 	if err != nil {
 		return err
@@ -83,32 +94,66 @@ func ProductUpdate(ctx context.Context, productID int64, productData *entity.Pro
 		}
 	}
 
-	productInfo, err := ProductByID(ctx, productID)
+	productInfo, err := p.GetByID(ctx, productID)
 	if err != nil {
 		return err
 	}
 	productBleve := entity.InsertProductReqToCreate(*productInfo)
-	err = bleve.AddProduct(strconv.Itoa(int(productID)), productBleve)
+	err = p.bleve.Add(strconv.Itoa(int(productID)), productBleve)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetProductsFromBleve(searchQuery string) ([]entity.ProductSearch, error) {
-	res, err := bleve.SearchProducts(searchQuery)
+func (p *ProductApplication) GetFromBleve(searchQuery string) ([]entity.ProductSearch, error) {
+	res, err := p.bleve.Search(searchQuery)
 	if err != nil {
 		return nil, err
 	}
 	var products []entity.ProductSearch
 	for _, item := range res.Hits {
 		result := item.Fields
+		id, err := strconv.ParseInt(item.ID, 10, 64)
+		if err != nil {
+			return nil, err
+		}
 		product := entity.ProductSearch{
-			ID:          item.ID,
+			ID:          id,
 			Name:        result["name"].(string),
 			Description: result["description"].(string),
-			Photos:      result["photos"].([]string),
 			Link:        result["link"].(string),
+		}
+		product.Photos, err = utils.ProcessPhotos(result["photos"])
+		if err != nil {
+			return nil, err
+		}
+		products = append(products, product)
+	}
+	return products, err
+}
+
+func (p *ProductApplication) GetAllFromBleve() ([]entity.ProductSearch, error) {
+	res, err := p.bleve.SearchWOQuery()
+	if err != nil {
+		return nil, err
+	}
+	var products []entity.ProductSearch
+	for _, item := range res.Hits {
+		id, err := strconv.ParseInt(item.ID, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		result := item.Fields
+		product := entity.ProductSearch{
+			ID:          id,
+			Name:        result["name"].(string),
+			Description: result["description"].(string),
+			Link:        result["link"].(string),
+		}
+		product.Photos, err = utils.ProcessPhotos(result["photos"])
+		if err != nil {
+			return nil, err
 		}
 		products = append(products, product)
 	}
@@ -116,7 +161,7 @@ func GetProductsFromBleve(searchQuery string) ([]entity.ProductSearch, error) {
 }
 
 func GetProductsSearchResult(searchTerm string, products []entity.Product) ([]entity.Product, error) {
-	searchTerm = cleanQuery(searchTerm)
+	searchTerm = utils.CleanQuery(searchTerm)
 
 	for i := range products {
 		products[i].Score = calculateProductsScore(products[i], searchTerm)

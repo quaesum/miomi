@@ -12,19 +12,19 @@ func GetServiceInfo(ctx context.Context, serviceID int64) (*entity.Service, erro
 SELECT 
   S.id, 
   S.volunteer_id, 
-  S.label, 
+  S.name, 
   S.description, 
   S.created_at, 
   IFNULL(S.deleted_at, 0) AS deleted_at, 
-  IFNULL(A.updated_at, 0) AS updated_at
+  IFNULL(S.updated_at, 0) AS updated_at
 FROM 
-  serives AS S 
+  services AS S 
 WHERE 
   S.id = ?
 GROUP BY 
   S.id, 
   S.volunteer_id, 
-  S.label, 
+  S.name, 
   S.description, 
   S.created_at,
   S.deleted_at,
@@ -33,7 +33,7 @@ GROUP BY
 	err := row.Scan(
 		&service.ID,
 		&service.VolunteerID,
-		&service.Label,
+		&service.Name,
 		&service.Description,
 		&service.CreatedAt,
 		&service.DeletedAt,
@@ -56,17 +56,17 @@ func GetAllServices(ctx context.Context) ([]entity.Service, error) {
 SELECT 
   S.id, 
   S.volunteer_id, 
-  S.label, 
+  S.name, 
   S.description, 
   S.created_at, 
   IFNULL(S.deleted_at, 0) AS deleted_at, 
   IFNULL(S.updated_at, 0) AS updated_at
 FROM 
-  serives AS S 
+  services AS S 
 GROUP BY 
   S.id, 
   S.volunteer_id, 
-  S.label, 
+  S.name, 
   S.description, 
   S.created_at,
   S.deleted_at,
@@ -82,7 +82,7 @@ GROUP BY
 		err = rows.Scan(
 			&service.ID,
 			&service.VolunteerID,
-			&service.Label,
+			&service.Name,
 			&service.Description,
 			&service.CreatedAt,
 			&service.DeletedAt,
@@ -105,12 +105,12 @@ GROUP BY
 
 func CreateService(ctx context.Context, userID int64, service *entity.ServiceCreateRequest) (int64, error) {
 	res, err := mioDB.ExecContext(ctx, `
-INSERT INTO serives  
+INSERT INTO services  
 		SET  volunteer_id = ?,
-		  	label = ?,
+		  	name = ?,
  			description = ?,
    			created_at = UNIX_TIMESTAMP()
-`, userID, service.Label, service.Description)
+`, userID, service.Name, service.Description)
 	if err != nil {
 		return 0, err
 	}
@@ -119,7 +119,7 @@ INSERT INTO serives
 
 func RemoveServiceByID(ctx context.Context, serviceID int64) error {
 	_, err := mioDB.ExecContext(ctx, `
-DELETE FROM serives
+DELETE FROM services
 WHERE id = ?
 
 `, serviceID)
@@ -131,13 +131,13 @@ WHERE id = ?
 
 func UpdateService(ctx context.Context, userID, serviceID int64, service *entity.ServiceCreateRequest) error {
 	_, err := mioDB.ExecContext(ctx, `
-UPDATE serives
+UPDATE services
    SET  volunteer_id = ?,
-		label = ?,
+		name = ?,
  		description = ?,
         updated_at = UNIX_TIMESTAMP()
  WHERE id = ? 
-`, userID, service.Label, service.Description, serviceID)
+`, userID, service.Name, service.Description, serviceID)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ UPDATE serives
 }
 
 func GetServicesCount() (int64, error) {
-	rows, err := mioDB.Query("SELECT count(*) FROM serives")
+	rows, err := mioDB.Query("SELECT count(*) FROM services")
 	if err != nil {
 		return 0, err
 	}

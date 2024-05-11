@@ -33,7 +33,7 @@ type AnimalCreateBleve struct {
 	Photos      []string `json:"photos"`
 }
 
-type AnimalsBleve struct {
+type AnimalBleve struct {
 	ID          int64    `json:"id"`
 	Age         float64  `json:"age"`
 	Name        string   `json:"name"`
@@ -109,15 +109,15 @@ type SearchAnimalsResponse struct {
 }
 
 type SearchAnimalsResponseV2 struct {
-	Animals []AnimalsBleve `json:"animals"`
-	MaxPage int8           `json:"max_page"`
+	Animals []AnimalBleve `json:"animals"`
+	MaxPage int8          `json:"max_page"`
 }
 
 type SearchServicesResponse struct {
-	Services []Service `json:"serives"`
-	MaxPage  int8      `json:"max_page"`
+	Services []ServiceBleve `json:"services"`
+	MaxPage  int8           `json:"max_page"`
 }
 type SearchProductsResponse struct {
-	Products []Product `json:"products"`
-	MaxPage  int8      `json:"max_page"`
+	Products []ProductSearch `json:"products"`
+	MaxPage  int8            `json:"max_page"`
 }

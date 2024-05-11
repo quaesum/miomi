@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package mail;
+option go_package = ".;pb";
 
 // Mail declares service that is capable of sending emails
 service Mail {

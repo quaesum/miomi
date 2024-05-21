@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/samber/lo"
-	"madmax/internal/application/db/bleve"
+	anBleve "madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
 	"madmax/internal/entity"
 	"madmax/internal/utils"
@@ -14,12 +14,12 @@ import (
 )
 
 type AnimalApplication struct {
-	bleve *bleve.AnimalBleve
+	bl *anBleve.AnimalBleve
 }
 
 func NewAnimalApplication() *AnimalApplication {
 	return &AnimalApplication{
-		bleve: bleve.NewAnimal(),
+		bl: anBleve.NewAnimal(),
 	}
 }
 
@@ -35,7 +35,6 @@ func (a *AnimalApplication) Create(ctx context.Context, animalData *entity.Anima
 	fmt.Println(animalData.ShelterId, animalID)
 	err = mysql.AddAnimalOnShelter(ctx, animalData.ShelterId, animalID)
 	if err != nil {
-		fmt.Println(err)
 		return 0, err
 	}
 	for _, photoID := range animalData.Photos {
@@ -50,7 +49,7 @@ func (a *AnimalApplication) Create(ctx context.Context, animalData *entity.Anima
 		return 0, err
 	}
 	animalBleve := entity.InserAnimalReqToCreate(*animal)
-	err = a.bleve.Add(strconv.Itoa(int(animalID)), animalBleve)
+	err = a.bl.Add(strconv.Itoa(int(animalID)), animalBleve)
 	if err != nil {
 		return 0, err
 	}
@@ -76,7 +75,7 @@ func (a *AnimalApplication) Remove(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	err = a.bleve.Remove(strconv.Itoa(int(id)))
+	err = a.bl.Remove(strconv.Itoa(int(id)))
 	if err != nil {
 		return err
 	}
@@ -116,7 +115,7 @@ func (a *AnimalApplication) Update(ctx context.Context, animalID int64, animalDa
 		return err
 	}
 	animalBleve := entity.InserAnimalReqToCreate(*animal)
-	err = a.bleve.Add(strconv.Itoa(int(animalID)), animalBleve)
+	err = a.bl.Add(strconv.Itoa(int(animalID)), animalBleve)
 	if err != nil {
 		return err
 	}
@@ -133,9 +132,9 @@ func (a *AnimalApplication) GetAllFromMYSQL(ctx context.Context) ([]entity.Anima
 	return animals, err
 }
 
-func (a *AnimalApplication) GetFromBleve(searchQuery string) ([]entity.AnimalBleve, error) {
-	animalBleve := bleve.NewAnimal()
-	res, err := animalBleve.Search(searchQuery)
+func (a *AnimalApplication) GetFromBleve(req *entity.SearchRequest, limit int) ([]entity.AnimalBleve, error) {
+	animalBleve := anBleve.NewAnimal()
+	res, err := animalBleve.Search(req, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -150,12 +149,14 @@ func (a *AnimalApplication) GetFromBleve(searchQuery string) ([]entity.AnimalBle
 			ID:          id,
 			Age:         result["age"].(float64),
 			Name:        result["name"].(string),
-			Sex:         result["sex"].(float64),
+			Sex:         result["sex"].(string),
 			Type:        result["type"].(string),
 			Description: result["description"].(string),
 			Sterilized:  result["sterilized"].(bool),
 			Vaccinated:  result["vaccinated"].(bool),
-			ShelterId:   result["shelterId"].(float64),
+			Shelter:     result["shelter"].(string),
+			ShelterId:   result["shelterId"].(string),
+			Address:     result["address"].(string),
 		}
 		animal.Photos, err = utils.ProcessPhotos(result["photos"])
 		if err != nil {
@@ -166,39 +167,8 @@ func (a *AnimalApplication) GetFromBleve(searchQuery string) ([]entity.AnimalBle
 	return animals, err
 }
 
-func (a *AnimalApplication) GetAllFromBleve() ([]entity.AnimalBleve, error) {
-	animalBleve := bleve.NewAnimal()
-	res, err := animalBleve.SearchWOQuery()
-	if err != nil {
-		return nil, err
-	}
-	var animals []entity.AnimalBleve
-	for _, item := range res.Hits {
-		result := item.Fields
-		id, err := strconv.ParseInt(item.ID, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		animal := entity.AnimalBleve{
-			ID:          id,
-			Age:         result["age"].(float64),
-			Name:        result["name"].(string),
-			Sex:         result["sex"].(float64),
-			Type:        result["type"].(string),
-			Description: result["description"].(string),
-			Sterilized:  result["sterilized"].(bool),
-			Vaccinated:  result["vaccinated"].(bool),
-			ShelterId:   result["shelterId"].(float64),
-			Shelter:     result["shelter"].(string),
-			Address:     result["address"].(string),
-		}
-		animal.Photos, err = utils.ProcessPhotos(result["photos"])
-		if err != nil {
-			return nil, err
-		}
-		animals = append(animals, animal)
-	}
-	return animals, err
+func GetAnimalTypes(ctx context.Context) ([]entity.AnimalTypes, error) {
+	return mysql.GetAllAnimalTypes(ctx)
 }
 
 func GetAnimalsSearchResult(searchTerm string, animals []entity.Animal) ([]entity.Animal, error) {

@@ -129,6 +129,16 @@ WHERE id = ?
 	return nil
 }
 
+func RemoveServiceByUserID(ctx context.Context, userID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+	DELETE FROM services WHERE id = ?
+`, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func UpdateService(ctx context.Context, userID, serviceID int64, service *entity.ServiceCreateRequest) error {
 	_, err := mioDB.ExecContext(ctx, `
 UPDATE services

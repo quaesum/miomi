@@ -29,6 +29,39 @@ SELECT P.filename
 	return files, err
 }
 
+func GetPhotosIdByAnimalID(ctx context.Context, animalID int64) ([]int64, error) {
+	rows, err := mioDB.QueryContext(ctx, `
+SELECT P.id 
+ FROM photos AS P 
+  INNER JOIN animals_photos AS PH ON PH.animalID = ?
+  AND P.id = PH.photoID`, animalID)
+	if err != nil {
+		return nil, err
+	}
+	var ids []int64
+	for rows.Next() {
+		var id int64
+		err = rows.Scan(
+			&id,
+		)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	return ids, err
+}
+
+func RemovePhoto(ctx context.Context, id int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+	DELETE FROM photos WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func CreateFile(ctx context.Context, name string) (int64, error) {
 	res, err := mioDB.ExecContext(ctx, `
 INSERT INTO photos

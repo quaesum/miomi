@@ -50,6 +50,16 @@ func UserCreate(ctx context.Context, userData *entity.UserCreateRequest) (string
 	if err != nil {
 		return "", err
 	}
+	in := entity.Email{
+		Email:             userData.Email,
+		UserID:            userID,
+		VerificationToken: token,
+		IsVerified:        false,
+	}
+	err = addEmail(ctx, &in)
+	if err != nil {
+		return "", err
+	}
 	return token, nil
 
 }
@@ -95,6 +105,70 @@ func GetAllUsers(ctx context.Context) ([]entity.User, error) {
 	return mysql.GetAllUsers(ctx)
 }
 
+func GetAllUsersBasicInfo(ctx context.Context) ([]entity.User, error) {
+	return mysql.GetAllUsersBasicInfo(ctx)
+}
+
+func RemoveUser(ctx context.Context, id int64) error {
+	err := mysql.RemoveServiceByUserID(ctx, id)
+	if err != nil {
+		return err
+	}
+	shID, err := mysql.GetShelterByVolunteerID(ctx, id)
+	if err != nil {
+		return err
+	}
+	count, err := mysql.GetShelterParticipatorsCount(ctx, shID)
+
+	err = mysql.RemoveUserFromShelter(ctx, id)
+	if err != nil {
+		return err
+	}
+	err = mysql.RemoveUserEmail(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if count > 1 {
+		return nil
+	}
+
+	animalsIDs, err := mysql.GetAnimalsByShID(ctx, shID)
+	if err != nil {
+		return err
+	}
+	for _, anID := range animalsIDs {
+		err = mysql.RemoveAnimalOnShelter(ctx, anID)
+		if err != nil {
+			return err
+		}
+		err = mysql.RemoveAnimalOnType(ctx, anID)
+
+		photoIds, err := mysql.GetPhotosIdByAnimalID(ctx, anID)
+		if err != nil {
+			return err
+		}
+		for _, pID := range photoIds {
+			err = mysql.RemovePhoto(ctx, pID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	err = mysql.RemoveShelterByID(ctx, shID)
+	if err != nil {
+		return err
+	}
+
+	err = mysql.DeleteUser(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func VerifyUserEmail(ctx context.Context, userID int64) error {
 	userBI, err := UserByID(ctx, userID)
 	if err != nil {
@@ -120,6 +194,60 @@ func VerifyEmail(ctx context.Context, token string) error {
 	}
 	if rowsAffected == 0 {
 		return errors.New("invalid token")
+	}
+	return nil
+}
+
+func addEmail(ctx context.Context, in *entity.Email) error {
+	err := mysql.AddEmail(ctx, in)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetSheltersConfirmRequests(ctx context.Context) (*[]entity.ShelterConfirmRequestInfo, error) {
+	return mysql.GetSheltersRequests(ctx)
+}
+
+func GetInvitationsByID(ctx context.Context, uID int64) (*[]entity.ShelterInvitation, error) {
+	return mysql.GetInvitationsByUserID(ctx, uID)
+}
+
+func InviteUserToShelter(ctx context.Context, shID, recID, sendID int64) error {
+	return mysql.CreateShelterInvitation(ctx, shID, sendID, recID)
+}
+
+func AcceptInvitation(ctx context.Context, id, uID int64) error {
+	shID, recID, _, err := mysql.GetInvitationByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if recID != uID {
+		return errors.New("ids do not match")
+	}
+	err = MoveUserOnNewShelter(ctx, uID, shID)
+	if err != nil {
+		return err
+	}
+	err = mysql.DeleteInvitation(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RejectInvitation(ctx context.Context, id, uID int64) error {
+	_, recID, _, err := mysql.GetInvitationByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if recID != uID {
+		return errors.New("ids do not match")
+	}
+	err = mysql.DeleteInvitation(ctx, id)
+	if err != nil {
+		return err
 	}
 	return nil
 }

@@ -147,8 +147,32 @@ CREATE TABLE IF NOT EXISTS `usersEmail` (
     CONSTRAINT `usersEmail_ibfk_1` FOREIGN KEY (`volunteerID`) REFERENCES `volunteers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `usersShelters` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `requestedBy` int(11) unsigned DEFAULT NULL,
+    `shelterID` int(11) unsigned NOT NULL,
+    `isConfirmed` tinyint(1) DEFAULT NULL,
+    createdAt int(11) DEFAULT NULL,
+    CONSTRAINT `usersShelters_df2f_1` FOREIGN KEY (`requestedBy`) REFERENCES `volunteers` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `userShelters_df2f_2` FOREIGN KEY (`shelterID`) REFERENCES `animal_shelters` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `volunteersInvitationsOnShelters` (
+    `id` int(11) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `senderID` int(11) unsigned NOT NULL,
+    `recipientID` int(11) unsigned NOT NULL,
+    `shelterID` int(11) unsigned NOT NULL,
+    KEY (`senderID`),
+    KEY (`recipientID`),
+    KEY (`shelterID`),
+    CONSTRAINT `volunteersInvitationsOnShelters_sfhr_1` FOREIGN KEY (`senderID`) REFERENCES `volunteers` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `volunteersInvitationsOnShelters_sfhr_2` FOREIGN KEY (`recipientID`) REFERENCES  `volunteers` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `volunteersInvitationsOnShelters_sfhr_3` FOREIGN KEY (`shelterID`) REFERENCES `animal_shelters` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- +goose Down
+DROP TABLE IF EXISTS volunteersInvitationsOnShelters;
+DROP TABLE IF EXISTS usersShelters;
 DROP TABLE IF EXISTS passwordRecovery;
 DROP TABLE IF EXISTS usersEmail;
 DROP TABLE  IF EXISTS products;

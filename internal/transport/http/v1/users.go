@@ -71,6 +71,17 @@ func getAllUsersHandler(c *gin.Context) {
 	}
 	c.JSON(200, gin.H{"data": users})
 }
+
+func getAllUsersInfoHandler(c *gin.Context) {
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	users, err := application.GetAllUsersBasicInfo(tctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	c.JSON(200, gin.H{"data": users})
+}
+
 func updateUserHandler(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
@@ -112,6 +123,35 @@ func getUserInfoHandler(c *gin.Context) {
 	return
 }
 
+func RemoveUserByIDHandler(c *gin.Context) {
+	id := c.Param("id")
+	userID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	ctx := context.Background()
+	err = application.RemoveUser(ctx, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	c.JSON(200, gin.H{})
+}
+
+func RemoveUserHandler(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	ctx := context.Background()
+	err = application.RemoveUser(ctx, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	c.JSON(200, gin.H{})
+}
+
 func verifyEmailSendHandler(c *gin.Context) {
 	userID, err := utils.GetUserID(c)
 	if err != nil {
@@ -120,7 +160,8 @@ func verifyEmailSendHandler(c *gin.Context) {
 	}
 	err = application.VerifyUserEmail(context.Background(), userID)
 	if err != nil {
-		c.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(200, gin.H{
 		"data": "ok",
@@ -130,11 +171,84 @@ func verifyEmailSendHandler(c *gin.Context) {
 func verifyEmailHandler(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
-		c.Redirect(http.StatusFound, "https://app.dealingi.by/email-confirm-restricted/")
+		c.Redirect(http.StatusFound, "http://localhost:3000/email-restricted")
 	}
 	err := application.VerifyEmail(context.Background(), token)
 	if err != nil {
-		c.Redirect(http.StatusFound, "https://app.dealingi.by/email-confirm-restricted/")
+		c.Redirect(http.StatusFound, "http://localhost:3000/email-restricted")
 	}
-	c.Redirect(http.StatusFound, "https://app.dealingi.by/email-confirm-success")
+	c.Redirect(http.StatusFound, "http://localhost:3000/email-confirmed")
+}
+
+func getSheltersRequests(c *gin.Context) {
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	requests, err := application.GetSheltersConfirmRequests(tctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"data": requests})
+}
+
+func getInvitations(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	invitations, err := application.GetInvitationsByID(tctx, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"data": invitations})
+
+}
+
+func acceptInvitation(c *gin.Context) {
+	id := c.Param("id")
+	invID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	err = application.AcceptInvitation(tctx, invID, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{})
+}
+
+func rejectInvitation(c *gin.Context) {
+	id := c.Param("id")
+	invID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*15)
+	err = application.RejectInvitation(tctx, invID, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{})
 }

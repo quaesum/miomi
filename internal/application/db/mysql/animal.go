@@ -150,6 +150,27 @@ GROUP BY
 	return animals, nil
 }
 
+func GetAnimalsByShID(ctx context.Context, shelterID int64) ([]int64, error) {
+	row, err := mioDB.QueryContext(ctx, `
+	SELECT AOH.animalID
+	FROM animals_on_shelters AS AOH
+	WHERE AOH.shelterID = ?;
+`, shelterID)
+	if err != nil {
+		return nil, err
+	}
+	var ids []int64
+	for row.Next() {
+		var id int64
+		err = row.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
 func CreateAnimal(ctx context.Context, animal *entity.AnimalCreateRequest) (int64, error) {
 	res, err := mioDB.ExecContext(ctx, `
 INSERT INTO animals  
@@ -221,4 +242,33 @@ func GetAnimalsCount() (int64, error) {
 		err = rows.Scan(&count)
 	}
 	return count, nil
+}
+
+func RemoveAnimalOnType(ctx context.Context, animalID int64) error {
+	_, err := mioDB.ExecContext(ctx, `
+	DELETE FROM animals_on_types
+	WHERE animalID = ?
+`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetAllAnimalTypes(ctx context.Context) ([]entity.AnimalTypes, error) {
+	rows, err := mioDB.Query("SELECT id, name FROM animal_types")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var animalTypes []entity.AnimalTypes
+	for rows.Next() {
+		var animalType entity.AnimalTypes
+		err = rows.Scan(&animalType.ID, &animalType.Type)
+		if err != nil {
+			return nil, err
+		}
+		animalTypes = append(animalTypes, animalType)
+	}
+	return animalTypes, nil
 }

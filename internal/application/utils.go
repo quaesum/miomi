@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"github.com/wagslane/go-rabbitmq"
 	"log"
-	rabbitmq2 "madmax/internal/application/db/rabbitmq"
 	"madmax/internal/entity"
 	"madmax/internal/utils"
+	mse "madmax/services/mail/entity"
 	"strconv"
 	"strings"
 )
@@ -31,10 +31,10 @@ func generateEmailVerificationToken(userID int64, userBI *entity.User) (string, 
 }
 
 func sendEmailVerificationMessage(email, token string) error {
-	msg := entity.MailQueMessage{
-		Type: entity.ConfirmEmailType,
+	msg := mse.MailQueMessage{
+		Type: mse.ConfirmEmailType,
 		To:   email,
-		CommonData: entity.CommonData{
+		CommonData: mse.CommonData{
 			Token: token,
 		},
 	}
@@ -44,7 +44,7 @@ func sendEmailVerificationMessage(email, token string) error {
 		return err
 	}
 
-	err = rabbitmq2.EmailPublisher.PublishWithContext(
+	err = mse.EmailPublisher.PublishWithContext(
 		context.Background(),
 		b,
 		[]string{"meme.emails"},

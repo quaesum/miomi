@@ -33,17 +33,24 @@ func (a AnimalBleve) Remove(id string) error {
 	return nil
 }
 
-func (a AnimalBleve) Search(queryTerm string) (*bleve.SearchResult, error) {
-	query := bleve.NewTermQuery(queryTerm)
-	search := bleve.NewSearchRequest(query)
+func (a AnimalBleve) Search(req *entity.SearchRequest, limit int) (*bleve.SearchResult, error) {
+	var search *bleve.SearchRequest
+
+	sr := req.Request
+	fl := req.Filters
+	if sr != "" || !fl.IsEmpty() {
+		q := NewQuery()
+		if sr != "" {
+			q.applySearchRequest(req.Request)
+		}
+		if !fl.IsEmpty() {
+			q.applyAnimalsFilters(&req.Filters)
+		}
+		search = bleve.NewSearchRequest(q)
+	} else {
+		search = bleve.NewSearchRequest(bleve.NewMatchAllQuery())
+	}
+	search.Size = limit
 	search.Fields = []string{"age", "name", "sex", "type", "description", "sterilized", "vaccinated", "shelterId", "shelter", "address", "photos"}
 	return a.Index.Search(search)
-}
-
-func (a AnimalBleve) SearchWOQuery() (*bleve.SearchResult, error) {
-	//scrollRequest := bleve.NewScrollRequest("scroll_id", 100)
-	searchRequest := bleve.NewSearchRequest(bleve.NewMatchAllQuery())
-	searchRequest.Fields = []string{"age", "name", "sex", "type", "description", "sterilized", "vaccinated", "shelterId", "shelter", "address", "photos"}
-	searchResult, _ := a.Index.Search(searchRequest)
-	return searchResult, nil
 }

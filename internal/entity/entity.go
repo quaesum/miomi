@@ -1,5 +1,7 @@
 package entity
 
+import "strconv"
+
 type Animal struct {
 	ID          int64    `json:"id"`
 	Age         int8     `json:"age"`
@@ -19,15 +21,40 @@ type Animal struct {
 	Score       int64    `json:"score"`
 }
 
+type AnimalFilters struct {
+	Sex        []string `json:"sex"`
+	Type       []string `json:"type"`
+	Sterilized bool     `json:"sterilized"`
+	Vaccinated bool     `json:"vaccinated"`
+	ShelterId  []int    `json:"shelterId"`
+	MaxAge     float64  `json:"maxAge"`
+	MinAge     float64  `json:"minAge"`
+}
+
+type AnimalTypes struct {
+	ID   int64  `json:"id"`
+	Type string `json:"name"`
+}
+
+func (f *AnimalFilters) IsEmpty() bool {
+	return len(f.Sex) == 0 &&
+		len(f.Type) == 0 &&
+		!f.Sterilized &&
+		!f.Vaccinated &&
+		len(f.ShelterId) == 0 &&
+		f.MaxAge == 0 &&
+		f.MinAge == 0
+}
+
 type AnimalCreateBleve struct {
 	Age         int      `json:"age"`
 	Name        string   `json:"name"`
-	Sex         int64    `json:"sex"`
+	Sex         string   `json:"sex"`
 	Type        string   `json:"type"`
 	Description string   `json:"description"`
 	Sterilized  bool     `json:"sterilized"`
 	Vaccinated  bool     `json:"vaccinated"`
-	ShelterId   int64    `json:"shelterId"`
+	ShelterId   string   `json:"shelterId"`
 	Shelter     string   `json:"shelter"`
 	Address     string   `json:"address"`
 	Photos      []string `json:"photos"`
@@ -37,12 +64,12 @@ type AnimalBleve struct {
 	ID          int64    `json:"id"`
 	Age         float64  `json:"age"`
 	Name        string   `json:"name"`
-	Sex         float64  `json:"sex"`
+	Sex         string   `json:"sex"`
 	Type        string   `json:"type"`
 	Description string   `json:"description"`
 	Sterilized  bool     `json:"sterilized"`
 	Vaccinated  bool     `json:"vaccinated"`
-	ShelterId   float64  `json:"shelterId"`
+	ShelterId   string   `json:"shelterId"`
 	Shelter     string   `json:"shelter"`
 	Address     string   `json:"address"`
 	Photos      []string `json:"photos"`
@@ -52,12 +79,12 @@ func InserAnimalReqToCreate(req Animal) *AnimalCreateBleve {
 	return &AnimalCreateBleve{
 		Age:         int(req.Age),
 		Name:        req.Name,
-		Sex:         req.Sex,
+		Sex:         strconv.FormatInt(req.Sex, 10),
 		Type:        req.Type,
 		Description: req.Description,
 		Sterilized:  req.Sterilized,
 		Vaccinated:  req.Vaccinated,
-		ShelterId:   req.ShelterId,
+		ShelterId:   strconv.FormatInt(req.ShelterId, 10),
 		Shelter:     req.Shelter,
 		Address:     req.Address,
 		Photos:      req.Photos,
@@ -65,9 +92,10 @@ func InserAnimalReqToCreate(req Animal) *AnimalCreateBleve {
 }
 
 type SearchRequest struct {
-	Request string `json:"request"`
-	Page    int    `json:"page"`
-	PerPage int    `json:"per_page"`
+	Request string        `json:"request"`
+	Page    int           `json:"page"`
+	PerPage int           `json:"per_page"`
+	Filters AnimalFilters `json:"filters"`
 }
 
 type AnimalCreateRequest struct {

@@ -10,10 +10,10 @@ import (
 	"log"
 	bleve2 "madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
-	"madmax/internal/application/db/rabbitmq"
 	"madmax/internal/transport/http/v1"
 	v2 "madmax/internal/transport/http/v2"
 	"madmax/internal/utils"
+	mse "madmax/services/mail/entity"
 	"net/http"
 	"os"
 	"os/signal"
@@ -61,27 +61,21 @@ func NewApp() (*App, error) {
 		return nil, fmt.Errorf("failed to initialize bleve: %w", err)
 	}
 
-	go utils.RabbitConnect()
-
-	publisher, err := rabbitmq.SetupRabbitMQ()
-	if err != nil {
-		log.Fatalf("Error setting up RabbitMQ: %v", err)
-	}
-	defer func() {
-		publisher.Close()
-	}()
-
-	app.publisher = publisher
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize rabbitmq client: %w", err)
-	}
-
 	return app, err
 }
 
 func (app *App) Run() error {
 	var errc = app.Start()
+
+	publisher, conn, err := utils.SetupRabbitMQ()
+	if err != nil {
+		log.Fatalf("Error setting up RabbitMQ: %v", err)
+	}
+	defer conn.Close() // Ensure the connection closes when main() completes
+	defer publisher.Close()
+	log.Println("rabbitmq connection established")
+
+	mse.EmailPublisher = publisher
 
 	var quit = make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)

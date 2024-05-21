@@ -11,6 +11,15 @@ import (
 	"time"
 )
 
+type AnimalsController interface {
+	Create(c *gin.Context)
+	GetByID(c *gin.Context)
+	GetAll(c *gin.Context)
+	Update(c *gin.Context)
+	Remove(c *gin.Context)
+	GetTypes(c *gin.Context)
+}
+
 type AnimalsHttp struct {
 	app *application.AnimalApplication
 }
@@ -141,4 +150,15 @@ func (a *AnimalsHttp) Remove(c *gin.Context) {
 	c.JSON(200, gin.H{})
 	c.Done()
 	return
+}
+
+func (a *AnimalsHttp) GetTypes(c *gin.Context) {
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Second*5)
+	types, err := application.GetAnimalTypes(tctx)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, types)
 }

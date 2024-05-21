@@ -9,12 +9,12 @@ import (
 )
 
 type AnimalsHttp struct {
-	app *application.AnimalApplication
+	*application.AnimalApplication
 }
 
 func NewAnimalsHttp() *AnimalsHttp {
 	return &AnimalsHttp{
-		app: application.NewAnimalApplication(),
+		application.NewAnimalApplication(),
 	}
 }
 
@@ -26,17 +26,12 @@ func (a *AnimalsHttp) GetAll(c *gin.Context) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
+	maxPossibleResults := (req.Page * req.PerPage) - 1
 	var animals []entity.AnimalBleve
-	if req.Request == "" {
-		animals, err = a.app.GetAllFromBleve()
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
-	} else {
-		animals, err = a.app.GetFromBleve(req.Request)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		}
+	animals, err = a.GetFromBleve(&req, maxPossibleResults)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	maxPages, err := utils.GetMaxPages(len(animals), req.PerPage)
@@ -48,6 +43,11 @@ func (a *AnimalsHttp) GetAll(c *gin.Context) {
 	left, right, err := utils.GetRecordsOnCurrentPage(req, len(animals))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if left > len(animals) || right > len(animals) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 

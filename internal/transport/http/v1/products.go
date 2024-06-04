@@ -68,21 +68,12 @@ func (p *ProductsHttp) GetAll(c *gin.Context) {
 	if req.PerPage <= 0 {
 		req.PerPage = 21
 	}
-	var products []entity.ProductSearch
-	if req.Request == "" {
-		products, err = p.app.GetAllFromBleve()
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"search": err.Error()})
-			return
-		}
-	} else {
-		products, err = p.app.GetFromBleve(req.Request)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"search": err.Error()})
-			return
-		}
+	maxPossibleResults := req.Page*req.PerPage + 1
+	products, err := p.app.GetFromBleve(&req, maxPossibleResults)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"search": err.Error()})
+		return
 	}
-
 	maxPages, err := utils.GetMaxPages(len(products), req.PerPage)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"pages": err.Error()})

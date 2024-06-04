@@ -30,7 +30,7 @@ UPDATE volunteers
    SET firstName = ?,
 	   lastName = ?,
        email  = ?,
-       phone = ?,
+       phone = ?
  WHERE id = ? 
 `, info.FirstName, info.LastName, info.Email, info.Phone, info.ID)
 	if err != nil {

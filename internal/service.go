@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"github.com/blevesearch/bleve"
 	"github.com/gin-gonic/gin"
-	rabbitmq2 "github.com/wagslane/go-rabbitmq"
+	"github.com/nats-io/nats.go"
 	"log"
 	bleve2 "madmax/internal/application/db/bleve"
 	"madmax/internal/application/db/mysql"
 	"madmax/internal/transport/http/v1"
 	v2 "madmax/internal/transport/http/v2"
-	"madmax/internal/utils"
-	mse "madmax/services/mail/entity"
+	nats2 "madmax/sdk/nats"
+	natsconn "madmax/services/mail/entity"
 	"net/http"
 	"os"
 	"os/signal"
@@ -28,7 +28,7 @@ type App struct {
 	BleveProducts bleve.Index
 	BleveAnimals  bleve.Index
 	BleveServices bleve.Index
-	publisher     *rabbitmq2.Publisher
+	Nats          *nats.Conn
 }
 
 var application *App
@@ -61,21 +61,17 @@ func NewApp() (*App, error) {
 		return nil, fmt.Errorf("failed to initialize bleve: %w", err)
 	}
 
+	app.Nats, err = nats2.NewClient(app.Config.NatsUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize nats: %w", err)
+	}
+	natsconn.Nats = app.Nats
+
 	return app, err
 }
 
 func (app *App) Run() error {
 	var errc = app.Start()
-
-	publisher, conn, err := utils.SetupRabbitMQ()
-	if err != nil {
-		log.Fatalf("Error setting up RabbitMQ: %v", err)
-	}
-	defer conn.Close() // Ensure the connection closes when main() completes
-	defer publisher.Close()
-	log.Println("rabbitmq connection established")
-
-	mse.EmailPublisher = publisher
 
 	var quit = make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)

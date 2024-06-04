@@ -9,6 +9,7 @@ func HandlerHTTP(router *gin.Engine) {
 	products := NewProductsHttp()
 	animals := NewAnimalsHttp()
 	services := NewServicesHttp()
+	reports := NewReportsHttp()
 
 	api := router.Group("/api")
 	api.POST("/login", userLoginHandler)
@@ -26,6 +27,7 @@ func HandlerHTTP(router *gin.Engine) {
 	userGroup.POST("/invitation/accept/:id", acceptInvitation)
 	userGroup.POST("/invitation/reject/:id", rejectInvitation)
 	userGroup.GET("/invitation", getInvitations)
+	userGroup.POST("/reports/add", reports.Create)
 
 	animalGroup := api.Group("/animal/v1")
 	//animalGroup.Use(UserTokenCheck())
@@ -40,6 +42,7 @@ func HandlerHTTP(router *gin.Engine) {
 	//shelterGroup.Use(UserTokenCheck())
 	shelterGroup.GET("/:id", getShelterByIDHandler)
 	shelterGroup.GET("/all", getAllSheltersHandler)
+	shelterGroup.GET("/animals", animals.GetByShelterID)
 	shelterGroup.GET("/all-info", getAllSheltersInfoHandler)
 	//shelterGroup.POST("/add", createShelterHandler)
 	shelterGroup.POST("/update/:id", updateShelterHandler)
@@ -91,6 +94,12 @@ func HandlerHTTP(router *gin.Engine) {
 	productsGroup.POST("/add", products.Create)
 	productsGroup.POST("/update/:id", products.Update)
 	productsGroup.POST("/remove/:id", products.Remove)
+
+	reportsGroup := api.Group("/reports/v1")
+	reportsGroup.Use(AdminTokenCheck())
+	reportsGroup.GET("/", reports.GetAll)
+	reportsGroup.GET("/:id", reports.GetByID)
+	reportsGroup.POST("/remove/:id", reports.Remove)
 }
 
 type Controller interface {

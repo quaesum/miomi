@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS animal_types(
     name varchar(90) DEFAULT NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+INSERT INTO animal_types
+(name)
+VALUES('Кот'),
+      ('Собака'),
+      ('Птица'),
+      ('Другое');
+
 CREATE TABLE IF NOT EXISTS animals_on_types (
     id INT(11) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     animal_typeID INT(11) UNSIGNED,
@@ -175,10 +182,10 @@ DROP TABLE IF EXISTS volunteersInvitationsOnShelters;
 DROP TABLE IF EXISTS usersShelters;
 DROP TABLE IF EXISTS passwordRecovery;
 DROP TABLE IF EXISTS usersEmail;
-DROP TABLE  IF EXISTS products;
 DROP TABLE IF EXISTS products_photos;
-DROP TABLE  IF EXISTS services;
+DROP TABLE  IF EXISTS products;
 DROP TABLE IF EXISTS services_photos;
+DROP TABLE  IF EXISTS services;
 DROP TABLE IF EXISTS news_photos;
 DROP TABLE IF EXISTS news;
 DROP TABLE IF EXISTS animals_photos;

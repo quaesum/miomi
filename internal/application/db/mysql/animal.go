@@ -175,6 +175,7 @@ func CreateAnimal(ctx context.Context, animal *entity.AnimalCreateRequest) (int6
 	res, err := mioDB.ExecContext(ctx, `
 INSERT INTO animals  
 		SET  age = ?,
+		    ageType = ?,
 		  	name = ?,
  			sex = ?,
    			description = ?,
@@ -182,7 +183,7 @@ INSERT INTO animals
             vaccinated = ?,
 		    onrainbow = false,
             onhappines  = false
-`, animal.Age, animal.Name, animal.Sex, animal.Description, animal.Sterilized, animal.Vaccinated)
+`, animal.Age, animal.AgeType, animal.Name, animal.Sex, animal.Description, animal.Sterilized, animal.Vaccinated)
 	if err != nil {
 		return 0, err
 	}
@@ -271,4 +272,89 @@ func GetAllAnimalTypes(ctx context.Context) ([]entity.AnimalTypes, error) {
 		animalTypes = append(animalTypes, animalType)
 	}
 	return animalTypes, nil
+}
+
+func GetAnimalsByShelterID(ctx context.Context, shelterID int64) ([]entity.Animal, error) {
+	query := `
+SELECT 
+  A.id, 
+  A.age, 
+  A.name, 
+  A.sex, 
+  ANT.name, 
+  A.description, 
+  A.sterilized, 
+  A.vaccinated, 
+  SH.shelter_name,
+  SH.adress,
+  SH.phone,
+  SH.id,
+  IFNULL(A.onrainbow, false) AS onrainbow, 
+  IFNULL(A.onhappines, false) AS onhappines
+FROM 
+  animals AS A 
+  INNER JOIN animal_types AS ANT 
+  LEFT JOIN animals_on_types AS AOT ON A.id = AOT.animalID 
+  AND ANT.id = AOT.animal_typeID 
+  INNER JOIN animal_shelters AS SH 
+  LEFT JOIN animals_on_shelters AS ASH ON A.id = ASH.animalID 
+  AND SH.id = ASH.shelterID 
+WHERE 
+  A.id = AOT.animalID 
+  AND A.id = ASH.animalID 
+  AND SH.id = ?
+GROUP BY 
+  A.id, 
+  A.age, 
+  A.name, 
+  A.sex, 
+  ANT.name, 
+  A.description, 
+  A.sterilized, 
+  A.vaccinated, 
+  SH.shelter_name,
+  SH.adress,
+  SH.phone,
+  SH.id,
+  A.onrainbow, 
+  A.onhappines
+`
+	rows, err := mioDB.QueryContext(ctx, query, shelterID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var animals []entity.Animal
+	for rows.Next() {
+		var animal entity.Animal
+		err = rows.Scan(
+			&animal.ID,
+			&animal.Age,
+			&animal.Name,
+			&animal.Sex,
+			&animal.Type,
+			&animal.Description,
+			&animal.Sterilized,
+			&animal.Vaccinated,
+			&animal.Shelter,
+			&animal.Address,
+			&animal.Phone,
+			&animal.ShelterId,
+			&animal.OnRainbow,
+			&animal.OnHappiness,
+		)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		photos, err := GetPhotosByAnimalID(ctx, animal.ID)
+		if err != nil && err != sql.ErrNoRows {
+			fmt.Println(err)
+		}
+		animal.Photos = photos
+		animals = append(animals, animal)
+	}
+
+	return animals, nil
 }

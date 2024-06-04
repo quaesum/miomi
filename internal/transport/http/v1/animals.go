@@ -14,6 +14,7 @@ import (
 type AnimalsController interface {
 	Create(c *gin.Context)
 	GetByID(c *gin.Context)
+	GetByShelterID(c *gin.Context)
 	GetAll(c *gin.Context)
 	Update(c *gin.Context)
 	Remove(c *gin.Context)
@@ -40,6 +41,30 @@ func (a *AnimalsHttp) GetByID(c *gin.Context) {
 	ctx := context.Background()
 	tctx, _ := context.WithTimeout(ctx, time.Second*5)
 	animals, err := a.app.GetByID(tctx, animalID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, animals)
+	c.Done()
+	return
+}
+
+func (a *AnimalsHttp) GetByShelterID(c *gin.Context) {
+	userID, err := utils.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	tctx, _ := context.WithTimeout(ctx, time.Minute*5)
+	user, err := application.UserByID(tctx, userID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	animals, err := a.app.GetByShelterID(tctx, user.ShelterID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

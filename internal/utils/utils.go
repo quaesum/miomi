@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"github.com/samber/lo"
+	"log"
 	"madmax/internal/entity"
 	"math"
 	"strings"
@@ -57,6 +58,7 @@ func ProcessPhotos(photos interface{}) ([]string, error) {
 		}
 		return photosOut, nil
 	default:
-		return nil, errors.New("invalid photo type")
+		log.Println("invalid photo type")
+		return nil, nil
 	}
 }

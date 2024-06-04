@@ -14,12 +14,12 @@ import (
 )
 
 type AnimalApplication struct {
-	bl *anBleve.AnimalBleve
+	Bl *anBleve.AnimalBleve
 }
 
 func NewAnimalApplication() *AnimalApplication {
 	return &AnimalApplication{
-		bl: anBleve.NewAnimal(),
+		Bl: anBleve.NewAnimal(),
 	}
 }
 
@@ -49,12 +49,71 @@ func (a *AnimalApplication) Create(ctx context.Context, animalData *entity.Anima
 		return 0, err
 	}
 	animalBleve := entity.InserAnimalReqToCreate(*animal)
-	err = a.bl.Add(strconv.Itoa(int(animalID)), animalBleve)
+	err = a.Bl.Add(strconv.Itoa(int(animalID)), animalBleve)
 	if err != nil {
 		return 0, err
 	}
 	return animalID, nil
 
+}
+
+func (a *AnimalApplication) CreateDirect(ctx context.Context, animalData *entity.Animal) error {
+	var req = &entity.AnimalCreateRequest{
+		Age:         animalData.Age,
+		AgeType:     animalData.AgeType,
+		Name:        animalData.Name,
+		Sex:         animalData.Sex,
+		Description: animalData.Description,
+		Sterilized:  animalData.Sterilized,
+		Vaccinated:  animalData.Vaccinated,
+		Onhappines:  animalData.OnHappiness,
+		Onrainbow:   animalData.OnRainbow,
+	}
+	animalID, err := mysql.CreateAnimal(ctx, req)
+	if err != nil {
+		return err
+	}
+	anType := func() int64 {
+		switch animalData.Type {
+		case "cat":
+			return 1
+		case "dog":
+			return 2
+		case "other":
+			return 4
+		}
+		return 4
+	}
+	err = mysql.AddAnimalOnType(ctx, anType(), animalID)
+	if err != nil {
+		return err
+	}
+	err = mysql.AddAnimalOnShelter(ctx, animalData.ShelterId, animalID)
+	if err != nil {
+		return err
+	}
+	for _, photo := range animalData.Photos {
+		id, err := mysql.CreateFile(ctx, photo)
+		if err != nil {
+			return err
+		}
+		err = mysql.AddAnimalsPhotos(ctx, animalID, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	animal, err := a.GetByID(ctx, animalID)
+	if err != nil {
+		return err
+	}
+	animalBleve := entity.InserAnimalReqToCreate(*animal)
+	err = a.Bl.Add(strconv.Itoa(int(animalID)), animalBleve)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *AnimalApplication) GetByID(ctx context.Context, id int64) (*entity.Animal, error) {
@@ -70,12 +129,20 @@ func (a *AnimalApplication) GetByID(ctx context.Context, id int64) (*entity.Anim
 	return animal, nil
 }
 
+func (a *AnimalApplication) GetByShelterID(ctx context.Context, shID int64) ([]entity.Animal, error) {
+	animals, err := mysql.GetAnimalsByShelterID(ctx, shID)
+	if err != nil {
+		return nil, err
+	}
+	return animals, nil
+}
+
 func (a *AnimalApplication) Remove(ctx context.Context, id int64) error {
 	err := mysql.RemoveAnimalByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	err = a.bl.Remove(strconv.Itoa(int(id)))
+	err = a.Bl.Remove(strconv.Itoa(int(id)))
 	if err != nil {
 		return err
 	}
@@ -115,7 +182,7 @@ func (a *AnimalApplication) Update(ctx context.Context, animalID int64, animalDa
 		return err
 	}
 	animalBleve := entity.InserAnimalReqToCreate(*animal)
-	err = a.bl.Add(strconv.Itoa(int(animalID)), animalBleve)
+	err = a.Bl.Add(strconv.Itoa(int(animalID)), animalBleve)
 	if err != nil {
 		return err
 	}
@@ -147,16 +214,17 @@ func (a *AnimalApplication) GetFromBleve(req *entity.SearchRequest, limit int) (
 		}
 		animal := entity.AnimalBleve{
 			ID:          id,
-			Age:         result["age"].(float64),
-			Name:        result["name"].(string),
-			Sex:         result["sex"].(string),
-			Type:        result["type"].(string),
-			Description: result["description"].(string),
-			Sterilized:  result["sterilized"].(bool),
-			Vaccinated:  result["vaccinated"].(bool),
-			Shelter:     result["shelter"].(string),
-			ShelterId:   result["shelterId"].(string),
-			Address:     result["address"].(string),
+			Age:         safeFloat64(result["age"]),
+			AgeType:     safeStringPtr(result["ageType"]),
+			Name:        safeString(result["name"]),
+			Sex:         safeString(result["sex"]),
+			Type:        safeString(result["type"]),
+			Description: safeString(result["description"]),
+			Sterilized:  safeBool(result["sterilized"]),
+			Vaccinated:  safeBool(result["vaccinated"]),
+			ShelterId:   safeString(result["shelterId"]),
+			Shelter:     safeString(result["shelter"]),
+			Address:     safeString(result["address"]),
 		}
 		animal.Photos, err = utils.ProcessPhotos(result["photos"])
 		if err != nil {
@@ -194,4 +262,58 @@ func calculateAnimalsScore(animal entity.Animal, searchTerm string) int64 {
 	nameCount := strings.Count(strings.ToLower(animal.Name), searchTerm)
 	descriptionCount := strings.Count(strings.ToLower(animal.Description), searchTerm)
 	return int64(nameCount + descriptionCount)
+}
+
+func safeString(i interface{}) string {
+	if i == nil {
+		return ""
+	}
+	if v, ok := i.(string); ok {
+		return v
+	}
+	return ""
+}
+
+// safeStringPtr получает указатель на строку из интерфейса
+func safeStringPtr(i interface{}) *string {
+	if i == nil {
+		return nil
+	}
+	if v, ok := i.(string); ok {
+		return &v
+	}
+	return nil
+}
+
+// safeFloat64 получает float64 значение из интерфейса
+func safeFloat64(i interface{}) float64 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(float64); ok {
+		return v
+	}
+	return 0
+}
+
+// safeBool получает bool значение из интерфейса
+func safeBool(i interface{}) bool {
+	if i == nil {
+		return false
+	}
+	if v, ok := i.(bool); ok {
+		return v
+	}
+	return false
+}
+
+// safeStringSlice получает срез строк из интерфейса
+func safeStringSlice(i interface{}) []string {
+	if i == nil {
+		return nil
+	}
+	if v, ok := i.([]string); ok {
+		return v
+	}
+	return nil
 }

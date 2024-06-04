@@ -31,12 +31,12 @@ func (p *ProductBleve) Remove(id string) error {
 	return nil
 }
 
-func (p *ProductBleve) Search(queryTerm string) (*bleve.SearchResult, error) {
-	query := bleve.NewTermQuery(queryTerm)
-	search := bleve.NewSearchRequest(query)
-	search.Fields = []string{"name", "description", "photos", "link"}
-	return p.Index.Search(search)
-}
+//func (p *ProductBleve) Search(queryTerm string) (*bleve.SearchResult, error) {
+//	query := bleve.NewTermQuery(queryTerm)
+//	search := bleve.NewSearchRequest(query)
+//	search.Fields = []string{"name", "description", "photos", "link"}
+//	return p.Index.Search(search)
+//}
 
 func (p *ProductBleve) SearchWOQuery() (*bleve.SearchResult, error) {
 	//scrollRequest := bleve.NewScrollRequest("scroll_id", 100)
@@ -44,4 +44,21 @@ func (p *ProductBleve) SearchWOQuery() (*bleve.SearchResult, error) {
 	searchRequest.Fields = []string{"name", "description", "photos", "link"}
 	searchResult, _ := p.Index.Search(searchRequest)
 	return searchResult, nil
+}
+
+func (p *ProductBleve) Search(req *entity.SearchRequest, limit int) (*bleve.SearchResult, error) {
+	var search *bleve.SearchRequest
+
+	sr := req.Request
+	if sr != "" {
+		q := NewQuery()
+		q.applySearchRequest(req.Request)
+
+		search = bleve.NewSearchRequest(q)
+	} else {
+		search = bleve.NewSearchRequest(bleve.NewMatchAllQuery())
+	}
+	search.Size = limit
+	search.Fields = []string{"name", "description", "photos", "link"}
+	return p.Index.Search(search)
 }

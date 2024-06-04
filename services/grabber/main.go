@@ -20,12 +20,12 @@ func main() {
 	url := "http://localhost:8080/api/products/v1/add"
 	method := "POST"
 
-	products, err := readProductsFromFile("./products.json")
+	products, err := readProductsFromFile("./result.json")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	for _, product := range products[:10] {
+	for _, product := range products[10:] {
 		jsonData, err := json.Marshal(product)
 		if err != nil {
 			fmt.Println(err)

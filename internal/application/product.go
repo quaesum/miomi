@@ -106,8 +106,8 @@ func (p *ProductApplication) Update(ctx context.Context, productID int64, produc
 	return nil
 }
 
-func (p *ProductApplication) GetFromBleve(searchQuery string) ([]entity.ProductSearch, error) {
-	res, err := p.bleve.Search(searchQuery)
+func (p *ProductApplication) GetFromBleve(req *entity.SearchRequest, limit int) ([]entity.ProductSearch, error) {
+	res, err := p.bleve.Search(req, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -133,32 +133,32 @@ func (p *ProductApplication) GetFromBleve(searchQuery string) ([]entity.ProductS
 	return products, err
 }
 
-func (p *ProductApplication) GetAllFromBleve() ([]entity.ProductSearch, error) {
-	res, err := p.bleve.SearchWOQuery()
-	if err != nil {
-		return nil, err
-	}
-	var products []entity.ProductSearch
-	for _, item := range res.Hits {
-		id, err := strconv.ParseInt(item.ID, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		result := item.Fields
-		product := entity.ProductSearch{
-			ID:          id,
-			Name:        result["name"].(string),
-			Description: result["description"].(string),
-			Link:        result["link"].(string),
-		}
-		product.Photos, err = utils.ProcessPhotos(result["photos"])
-		if err != nil {
-			return nil, err
-		}
-		products = append(products, product)
-	}
-	return products, err
-}
+//func (p *ProductApplication) GetAllFromBleve() ([]entity.ProductSearch, error) {
+//	res, err := p.bleve.SearchWOQuery()
+//	if err != nil {
+//		return nil, err
+//	}
+//	var products []entity.ProductSearch
+//	for _, item := range res.Hits {
+//		id, err := strconv.ParseInt(item.ID, 10, 64)
+//		if err != nil {
+//			return nil, err
+//		}
+//		result := item.Fields
+//		product := entity.ProductSearch{
+//			ID:          id,
+//			Name:        result["name"].(string),
+//			Description: result["description"].(string),
+//			Link:        result["link"].(string),
+//		}
+//		product.Photos, err = utils.ProcessPhotos(result["photos"])
+//		if err != nil {
+//			return nil, err
+//		}
+//		products = append(products, product)
+//	}
+//	return products, err
+//}
 
 func GetProductsSearchResult(searchTerm string, products []entity.Product) ([]entity.Product, error) {
 	searchTerm = utils.CleanQuery(searchTerm)

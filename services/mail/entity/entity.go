@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/wagslane/go-rabbitmq"
+	"github.com/nats-io/nats.go"
 )
 
 const (
@@ -10,7 +10,7 @@ const (
 	RegistrationConfirmType = "RegConf"
 )
 
-var EmailPublisher *rabbitmq.Publisher
+var Nats *nats.Conn
 
 type MailQueMessage struct {
 	Type string
@@ -20,12 +20,28 @@ type MailQueMessage struct {
 }
 
 type CommonData struct {
-	Token string
+	Token                 string
+	TenderNum             string
+	TenderName            string
+	Link                  string
+	CompanyName           string
+	CompanyUNP            string
+	Bidding               string
+	Participators         string
+	ParticipatorsListLink string
+	Data                  string
+	Time                  string
+	ReTenderNum           string
+	ReTenderName          string
+	Percent               string
 }
-
 type Mail struct {
 	Sender  string
 	To      []string
 	Subject string
 	Body    string
+}
+
+type Settings struct {
+	NatsUrl string `json:"NATS_URL" mapstructure:"NATS_URL"`
 }

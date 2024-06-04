@@ -1,15 +1,16 @@
 package application
 
 import (
-	"context"
 	"encoding/json"
-	"github.com/wagslane/go-rabbitmq"
 	"log"
 	"madmax/internal/entity"
 	"madmax/internal/utils"
+	"madmax/sdk/nats"
 	mse "madmax/services/mail/entity"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func calculateServicesScore(service entity.Service, searchTerm string) int64 {
@@ -31,30 +32,35 @@ func generateEmailVerificationToken(userID int64, userBI *entity.User) (string, 
 }
 
 func sendEmailVerificationMessage(email, token string) error {
-	msg := mse.MailQueMessage{
-		Type: mse.ConfirmEmailType,
+
+	m := nats.Request{
+		Code: mse.ConfirmEmailType,
 		To:   email,
 		CommonData: mse.CommonData{
 			Token: token,
 		},
 	}
-	b, err := json.Marshal(msg)
+	req, err := json.Marshal(m)
 	if err != nil {
-		log.Printf("error marshalling email verification message: %v", err)
 		return err
 	}
 
-	err = mse.EmailPublisher.PublishWithContext(
-		context.Background(),
-		b,
-		[]string{"meme.emails"},
-		rabbitmq.WithPublishOptionsContentType("application/json"),
-		rabbitmq.WithPublishOptionsMandatory,
-		rabbitmq.WithPublishOptionsPersistentDelivery,
-		rabbitmq.WithPublishOptionsExchange("emails"),
-	)
+	re, err := mse.Nats.Request("mail_topic", req, 10*time.Second)
 	if err != nil {
-		log.Printf("error publishing email verification message: %v", err)
+		log.Println("failed to send email confirmation")
+		return err
 	}
-	return err
+
+	resp := nats.Response{}
+	err = json.Unmarshal(re.Data, &resp)
+
+	if err != nil {
+		log.Println("failed to unmarshal nats response")
+		return err
+	}
+
+	if resp.Code != http.StatusOK {
+		log.Println("response isn't correct")
+	}
+	return nil
 }

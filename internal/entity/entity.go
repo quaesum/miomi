@@ -5,6 +5,7 @@ import "strconv"
 type Animal struct {
 	ID          int64    `json:"id"`
 	Age         int8     `json:"age"`
+	AgeType     string   `json:"ageType"`
 	Name        string   `json:"name"`
 	Sex         int64    `json:"sex"`
 	Type        string   `json:"type"`
@@ -48,6 +49,7 @@ func (f *AnimalFilters) IsEmpty() bool {
 
 type AnimalCreateBleve struct {
 	Age         int      `json:"age"`
+	AgeType     string   `json:"ageType"`
 	Name        string   `json:"name"`
 	Sex         string   `json:"sex"`
 	Type        string   `json:"type"`
@@ -63,6 +65,7 @@ type AnimalCreateBleve struct {
 type AnimalBleve struct {
 	ID          int64    `json:"id"`
 	Age         float64  `json:"age"`
+	AgeType     *string  `json:"ageType"`
 	Name        string   `json:"name"`
 	Sex         string   `json:"sex"`
 	Type        string   `json:"type"`
@@ -78,6 +81,7 @@ type AnimalBleve struct {
 func InserAnimalReqToCreate(req Animal) *AnimalCreateBleve {
 	return &AnimalCreateBleve{
 		Age:         int(req.Age),
+		AgeType:     req.AgeType,
 		Name:        req.Name,
 		Sex:         strconv.FormatInt(req.Sex, 10),
 		Type:        req.Type,
@@ -100,6 +104,7 @@ type SearchRequest struct {
 
 type AnimalCreateRequest struct {
 	Age         int8    `json:"age"`
+	AgeType     string  `json:"ageType"`
 	Name        string  `json:"name"`
 	Sex         int64   `json:"sex"`
 	Type        int64   `json:"type"`
@@ -148,4 +153,16 @@ type SearchServicesResponse struct {
 type SearchProductsResponse struct {
 	Products []ProductSearch `json:"products"`
 	MaxPage  int8            `json:"max_page"`
+}
+
+type ReportCreateRequest struct {
+	Label       string `json:"label"`
+	Description string `json:"description"`
+}
+
+type Report struct {
+	ID          int64        `json:"id"`
+	Sender      UserResponse `json:"sender"`
+	Label       string       `json:"label"`
+	Description string       `json:"description"`
 }

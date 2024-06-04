@@ -26,15 +26,13 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin3000
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: 'rabbitmq'
+  nats:
+    image: nats
+    expose:
+      - "4222"
     ports:
-      - 5672:5672
-      - 15672:15672
-    volumes:
-      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      - "4222:4222"
+    hostname: nats-server
 
 
 volumes:

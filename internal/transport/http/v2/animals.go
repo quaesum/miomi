@@ -26,7 +26,7 @@ func (a *AnimalsHttp) GetAll(c *gin.Context) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
-	maxPossibleResults := (req.Page * req.PerPage) - 1
+	maxPossibleResults := req.Page*req.PerPage + 1
 	var animals []entity.AnimalBleve
 	animals, err = a.GetFromBleve(&req, maxPossibleResults)
 	if err != nil {

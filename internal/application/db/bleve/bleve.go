@@ -70,6 +70,7 @@ func buildAnimalsMapping() *mapping.IndexMappingImpl {
 	animalMapping := bleve.NewDocumentMapping()
 
 	animalMapping.AddFieldMappingsAt("age", numericFieldMapping)
+	animalMapping.AddFieldMappingsAt("ageType", textFieldMapping)
 	animalMapping.AddFieldMappingsAt("name", textFieldMapping)
 	animalMapping.AddFieldMappingsAt("sex", textFieldMapping)
 	animalMapping.AddFieldMappingsAt("type", textFieldMapping)
